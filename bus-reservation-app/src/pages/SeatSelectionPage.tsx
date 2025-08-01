@@ -103,14 +103,12 @@ const SeatSelectionPage: React.FC = () => {
       return;
     }
 
-    // TODO: Navegar a la página de datos del pasajero
     console.log('Continuar con reserva:', {
       tripId,
       selectedSeats,
       total: calculateTotal()
     });
     
-    // Por ahora, mostrar un mensaje
     alert(`Reserva iniciada para ${selectedSeats.length} asiento(s): ${selectedSeats.join(', ')}\nTotal: $${calculateTotal().toFixed(2)}`);
   };
 
