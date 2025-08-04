@@ -1,172 +1,106 @@
--- =====================================================
--- COOPERBUS - DATOS DE PRUEBA SIMPLIFICADOS
--- Script simple para poblar las tablas con datos básicos
--- =====================================================
+-- =================================================================
+-- Script de Inserción de Datos para el Sistema de Reservas de Autobuses
+-- Este script debe ejecutarse DESPUÉS de crear las tablas.
+-- =================================================================
 
--- =====================================================
--- 1. INSERTAR RUTAS
--- =====================================================
-INSERT INTO routes (origin, destination, duration_minutes, price) VALUES
-('Quito', 'Guayaquil', 480, 15.50),
-('Guayaquil', 'Quito', 480, 15.50),
-('Quito', 'Cuenca', 300, 12.00),
-('Cuenca', 'Quito', 300, 12.00),
-('Guayaquil', 'Cuenca', 240, 10.00),
-('Cuenca', 'Guayaquil', 240, 10.00),
-('Quito', 'Ambato', 120, 8.00),
-('Ambato', 'Quito', 120, 8.00);
+-- Usamos CTEs (Common Table Expressions) para insertar datos en orden
+-- y reutilizar los IDs generados en las siguientes inserciones.
 
--- =====================================================
--- 2. INSERTAR AUTOBUSES
--- =====================================================
--- Necesitamos obtener los IDs de las rutas para los buses
-INSERT INTO buses (bus_number, route_id, capacity, is_active) 
-SELECT 
-    'CB-' || r.origin || '-' || r.destination || '-0' || series.num,
-    r.id,
-    40,
-    true
-FROM routes r
-CROSS JOIN generate_series(1, 4) AS series(num);
+WITH inserted_routes AS (
+    INSERT INTO public.routes (origin, destination, duration_minutes, price) VALUES
+    ('Quito', 'Guayaquil', 480, 15.00),
+    ('Quito', 'Tulcán', 300, 7.50),
+    ('Quito', 'Loja', 660, 20.00),
+    ('Quito', 'Lago Agrio', 450, 14.00),
+    ('Quito', 'Esmeraldas', 390, 11.50)
+    RETURNING id, destination
+),
 
--- =====================================================
--- 3. INSERTAR HORARIOS
--- =====================================================
-INSERT INTO schedules (route_id, departure_time, days_of_week, is_active)
-SELECT 
-    r.id,
-    time_slot,
-    ARRAY[1,2,3,4,5,6,7],
-    true
-FROM routes r
-CROSS JOIN (
-    VALUES 
-    ('06:00'::time),
-    ('10:00'::time),
-    ('14:00'::time),
-    ('18:00'::time)
-) AS times(time_slot);
+inserted_schedules AS (
+    INSERT INTO public.schedules (route_id, departure_time, days_of_week, is_active)
+    SELECT 
+        r.id,
+        s.departure_time,
+        ARRAY[1,2,3,4,5,6,7]::integer[], 
+        true
+    FROM inserted_routes r,
+    (VALUES ('08:00:00'), ('12:00:00'), ('22:00:00')) AS s(departure_time)
+    RETURNING id, route_id, departure_time
+),
 
--- =====================================================
--- 4. INSERTAR VIAJES PARA LOS PRÓXIMOS 15 DÍAS
--- =====================================================
-INSERT INTO trips (schedule_id, bus_id, trip_date, available_seats, status)
-SELECT 
-    s.id,
-    b.id,
-    date_series.trip_date,
-    40,
-    'active'
-FROM schedules s
-JOIN buses b ON s.route_id = b.route_id
-CROSS JOIN (
-    SELECT generate_series(
-        CURRENT_DATE,
-        CURRENT_DATE + INTERVAL '15 days',
-        INTERVAL '1 day'
-    )::date AS trip_date
-) AS date_series
-WHERE b.bus_number LIKE '%-01' -- Solo usar el primer bus de cada ruta
-LIMIT 500; -- Limitar para no crear demasiados viajes
+inserted_buses AS (
+    INSERT INTO public.buses (bus_number, route_id, capacity)
+    SELECT 'QG-' || generate_series(101, 108), r.id, 40 FROM inserted_routes r WHERE r.destination = 'Guayaquil'
+    UNION ALL
+    SELECT 'QT-' || generate_series(201, 204), r.id, 40 FROM inserted_routes r WHERE r.destination = 'Tulcán'
+    UNION ALL
+    SELECT 'QL-' || generate_series(301, 304), r.id, 40 FROM inserted_routes r WHERE r.destination = 'Loja'
+    UNION ALL
+    SELECT 'QLA-' || generate_series(401, 404), r.id, 40 FROM inserted_routes r WHERE r.destination = 'Lago Agrio'
+    UNION ALL
+    SELECT 'QE-' || generate_series(501, 504), r.id, 40 FROM inserted_routes r WHERE r.destination = 'Esmeraldas'
+    RETURNING id, route_id
+),
 
--- =====================================================
--- 5. CREAR ASIENTOS PARA TODOS LOS VIAJES
--- =====================================================
-INSERT INTO seats (trip_id, seat_number, is_reserved)
-SELECT 
-    t.id,
-    seat_num,
-    false
-FROM trips t
-CROSS JOIN generate_series(1, 40) AS seat_num;
+inserted_passengers AS (
+    INSERT INTO public.passengers (identification, name, email, phone, address) VALUES
+    ('1722334455', 'Carlos Solis', 'carlos.solis@email.com', '0987654321', 'Av. Amazonas 123, Quito'),
+    ('0988776655', 'Ana Paredes', 'ana.paredes@email.com', '0998877665', 'Calle Larga 456, Cuenca')
+    RETURNING id, identification, name, email, phone, address
+),
 
--- =====================================================
--- 6. INSERTAR PASAJEROS DE PRUEBA
--- =====================================================
-INSERT INTO passengers (name, email, phone, address) VALUES
-('Juan Pérez', 'juan.perez@email.com', '0991234567', 'Quito'),
-('María García', 'maria.garcia@email.com', '0987654321', 'Guayaquil'),
-('Carlos Ruiz', 'carlos.ruiz@email.com', '0976543210', 'Cuenca'),
-('Ana López', 'ana.lopez@email.com', '0965432109', 'Quito'),
-('Diego Morales', 'diego.morales@email.com', '0954321098', 'Guayaquil');
+inserted_trips AS (
+    INSERT INTO public.trips (bus_id, schedule_id, trip_date, available_seats)
+    SELECT b.id, s.id, CURRENT_DATE, 40
+    FROM inserted_schedules s
+    JOIN inserted_buses b ON s.route_id = b.route_id
+    WHERE s.departure_time = '08:00:00' AND b.id = (SELECT id FROM inserted_buses LIMIT 1)
+    UNION ALL
+    SELECT b.id, s.id, CURRENT_DATE + 1, 40
+    FROM inserted_schedules s
+    JOIN inserted_buses b ON s.route_id = b.route_id
+    WHERE s.departure_time = '22:00:00' AND b.id = (SELECT id FROM inserted_buses WHERE route_id = s.route_id LIMIT 1)
+    RETURNING id, trip_date
+),
 
--- =====================================================
--- 7. CREAR UNA RESERVA DE EJEMPLO
--- =====================================================
--- Primero crear la reserva
-INSERT INTO reservations (
-    trip_id, 
-    passenger_id, 
-    passenger_name, 
-    passenger_email, 
-    passenger_phone, 
-    seat_numbers, 
-    total_amount, 
-    payment_status, 
-    confirmation_code
+inserted_reservations AS (
+    INSERT INTO public.reservations (trip_id, passenger_id, passenger_name, passenger_email, passenger_phone, passenger_address, seat_numbers, total_amount, payment_status, payment_method, confirmation_code)
+    SELECT 
+        (SELECT id FROM inserted_trips WHERE trip_date = CURRENT_DATE),
+        p.id, p.name, p.email, p.phone, p.address,
+        ARRAY[5, 6],
+        (SELECT price FROM public.routes WHERE destination = 'Guayaquil') * 2,
+        'pending', 'credit_card', 'CONF-ABC12'
+    FROM inserted_passengers p WHERE p.identification = '1722334455'
+    UNION ALL
+    SELECT 
+        (SELECT id FROM inserted_trips WHERE trip_date = CURRENT_DATE + 1),
+        p.id, p.name, p.email, p.phone, p.address,
+        ARRAY[10],
+        (SELECT price FROM public.routes WHERE destination = 'Loja'),
+        'pending', 'cash', 'CONF-XYZ78'
+    FROM inserted_passengers p WHERE p.identification = '0988776655'
+    RETURNING id, trip_id, confirmation_code, seat_numbers
+),
+
+inserted_seats AS (
+    INSERT INTO public.seats (trip_id, seat_number, is_reserved, reservation_id)
+    SELECT
+        ir.trip_id,
+        unnest(ir.seat_numbers),
+        true,
+        ir.id
+    FROM inserted_reservations ir
+    RETURNING id, reservation_id
 )
-SELECT 
-    t.id,
-    p.id,
-    p.name,
-    p.email,
-    p.phone,
-    ARRAY[1, 2],
-    31.00,
+
+INSERT INTO public.payments (reservation_id, amount, payment_method, status, transaction_id, card_last_four)
+SELECT
+    r.id,
+    res.total_amount,
+    res.payment_method,
     'completed',
-    'CB123456'
-FROM trips t
-JOIN schedules s ON t.schedule_id = s.id
-JOIN routes r ON s.route_id = r.id
-JOIN passengers p ON p.email = 'juan.perez@email.com'
-WHERE r.origin = 'Quito' 
-AND r.destination = 'Guayaquil'
-AND t.trip_date > CURRENT_DATE
-LIMIT 1;
-
--- Marcar los asientos como reservados
-UPDATE seats 
-SET is_reserved = true,
-    reservation_id = (SELECT id FROM reservations WHERE confirmation_code = 'CB123456')
-WHERE trip_id = (
-    SELECT t.id 
-    FROM trips t
-    JOIN schedules s ON t.schedule_id = s.id
-    JOIN routes r ON s.route_id = r.id
-    WHERE r.origin = 'Quito' 
-    AND r.destination = 'Guayaquil'
-    AND t.trip_date > CURRENT_DATE
-    LIMIT 1
-)
-AND seat_number IN (1, 2);
-
--- Actualizar asientos disponibles
-UPDATE trips 
-SET available_seats = 38
-WHERE id = (
-    SELECT t.id 
-    FROM trips t
-    JOIN schedules s ON t.schedule_id = s.id
-    JOIN routes r ON s.route_id = r.id
-    WHERE r.origin = 'Quito' 
-    AND r.destination = 'Guayaquil'
-    AND t.trip_date > CURRENT_DATE
-    LIMIT 1
-);
-
--- =====================================================
--- 8. VERIFICAR DATOS INSERTADOS
--- =====================================================
-SELECT 'routes' as tabla, COUNT(*) as total FROM routes
-UNION ALL
-SELECT 'buses' as tabla, COUNT(*) as total FROM buses
-UNION ALL
-SELECT 'schedules' as tabla, COUNT(*) as total FROM schedules
-UNION ALL
-SELECT 'trips' as tabla, COUNT(*) as total FROM trips
-UNION ALL
-SELECT 'seats' as tabla, COUNT(*) as total FROM seats
-UNION ALL
-SELECT 'passengers' as tabla, COUNT(*) as total FROM passengers
-UNION ALL
-SELECT 'reservations' as tabla, COUNT(*) as total FROM reservations;
+    'TXN-' || substr(md5(random()::text), 0, 15),
+    CASE WHEN res.payment_method = 'credit_card' THEN '4242' ELSE NULL END
+FROM public.reservations res
+JOIN inserted_reservations r ON res.confirmation_code = r.confirmation_code;
