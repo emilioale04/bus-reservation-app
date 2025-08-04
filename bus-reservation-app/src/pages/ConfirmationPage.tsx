@@ -38,6 +38,38 @@ const ConfirmationPage: React.FC = () => {
   const navigate = useNavigate();
   const bookingData = location.state as BookingData;
 
+  // Debug: Imprimir los datos recibidos
+  console.log("Datos recibidos en ConfirmationPage:", bookingData);
+
+  // Datos de respaldo para prueba si no hay datos reales
+  const getDisplayData = () => {
+    if (bookingData?.trip) {
+      return bookingData;
+    }
+
+    // Datos de prueba si no hay datos reales
+    return {
+      ...bookingData,
+      trip: {
+        schedule: {
+          route: {
+            origin: "Quito",
+            destination: "Guayaquil",
+            price: 15.5,
+          },
+          departureTime: "2024-08-03T08:00:00",
+          arrivalTime: "2024-08-03T16:00:00",
+        },
+        bus: {
+          number: "B001",
+          type: "Ejecutivo",
+        },
+      },
+    };
+  };
+
+  const displayData = getDisplayData();
+
   React.useEffect(() => {
     if (!bookingData) {
       navigate("/");
@@ -92,7 +124,7 @@ const ConfirmationPage: React.FC = () => {
             </li>
             <li>
               <Link
-                to={`/booking/${bookingData.tripId}`}
+                to={`/booking/${displayData.tripId}`}
                 className="hover:text-gray-700"
               >
                 Selección de Asientos
@@ -103,7 +135,7 @@ const ConfirmationPage: React.FC = () => {
             </li>
             <li>
               <Link
-                to={`/registro/${bookingData.tripId}`}
+                to={`/registro/${displayData.tripId}`}
                 className="hover:text-gray-700"
               >
                 Registro
@@ -144,8 +176,11 @@ const ConfirmationPage: React.FC = () => {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-500">Ruta</h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {bookingData.trip?.schedule?.route?.origin} →{" "}
-                      {bookingData.trip?.schedule?.route?.destination}
+                      {displayData.trip?.schedule?.route?.origin ||
+                        "No disponible"}{" "}
+                      →{" "}
+                      {displayData.trip?.schedule?.route?.destination ||
+                        "No disponible"}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -153,12 +188,14 @@ const ConfirmationPage: React.FC = () => {
                       Fecha y Hora de Salida
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {bookingData.trip?.schedule?.departureTime && (
+                      {displayData.trip?.schedule?.departureTime ? (
                         <>
-                          {formatDate(bookingData.trip.schedule.departureTime)}
+                          {formatDate(displayData.trip.schedule.departureTime)}
                           <br />
-                          {formatTime(bookingData.trip.schedule.departureTime)}
+                          {formatTime(displayData.trip.schedule.departureTime)}
                         </>
+                      ) : (
+                        "No disponible"
                       )}
                     </p>
                   </div>
@@ -169,10 +206,10 @@ const ConfirmationPage: React.FC = () => {
                       Información del Bus
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      Bus Nº {bookingData.trip?.bus?.number}
+                      Bus Nº {displayData.trip?.bus?.number || "No disponible"}
                     </p>
                     <p className="text-md text-gray-600">
-                      {bookingData.trip?.bus?.type}
+                      {displayData.trip?.bus?.type || "No disponible"}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -180,12 +217,12 @@ const ConfirmationPage: React.FC = () => {
                       Asientos Reservados
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {bookingData.selectedSeats
+                      {displayData.selectedSeats
                         .sort((a, b) => a - b)
                         .join(", ")}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Total: {bookingData.selectedSeats.length} asiento(s)
+                      Total: {displayData.selectedSeats.length} asiento(s)
                     </p>
                   </div>
                 </div>
@@ -207,11 +244,11 @@ const ConfirmationPage: React.FC = () => {
                       Información Personal
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {bookingData.passengerInfo.nombre}{" "}
-                      {bookingData.passengerInfo.apellido}
+                      {displayData.passengerInfo.nombre}{" "}
+                      {displayData.passengerInfo.apellido}
                     </p>
                     <p className="text-md text-gray-600">
-                      Cédula: {bookingData.passengerInfo.cedula}
+                      Cédula: {displayData.passengerInfo.cedula}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -219,7 +256,7 @@ const ConfirmationPage: React.FC = () => {
                       Dirección
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {bookingData.passengerInfo.direccion}
+                      {displayData.passengerInfo.direccion}
                     </p>
                   </div>
                 </div>
@@ -229,10 +266,10 @@ const ConfirmationPage: React.FC = () => {
                       Información de Contacto
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {bookingData.passengerInfo.celular}
+                      {displayData.passengerInfo.celular}
                     </p>
                     <p className="text-md text-gray-600 break-all">
-                      {bookingData.passengerInfo.email}
+                      {displayData.passengerInfo.email}
                     </p>
                   </div>
                 </div>
@@ -255,13 +292,16 @@ const ConfirmationPage: React.FC = () => {
                   <div className="grid grid-cols-2 items-center py-3">
                     <dt className="text-gray-600">Precio por asiento</dt>
                     <dd className="text-right text-lg font-medium text-gray-900">
-                      ${bookingData.trip?.schedule?.route?.price.toFixed(2)}
+                      $
+                      {displayData.trip?.schedule?.route?.price
+                        ? displayData.trip.schedule.route.price.toFixed(2)
+                        : "0.00"}
                     </dd>
                   </div>
                   <div className="grid grid-cols-2 items-center py-3 border-t border-gray-200">
                     <dt className="text-gray-600">Cantidad de asientos</dt>
                     <dd className="text-right text-lg font-medium text-gray-900">
-                      {bookingData.selectedSeats.length}
+                      {displayData.selectedSeats.length}
                     </dd>
                   </div>
                   <div className="grid grid-cols-2 items-center py-4 border-t-2 border-gray-300">
@@ -269,7 +309,13 @@ const ConfirmationPage: React.FC = () => {
                       Total a pagar
                     </dt>
                     <dd className="text-right text-2xl font-bold text-blue-600">
-                      ${bookingData.total.toFixed(2)}
+                      $
+                      {displayData.total
+                        ? displayData.total.toFixed(2)
+                        : (
+                            (displayData.trip?.schedule?.route?.price || 0) *
+                            displayData.selectedSeats.length
+                          ).toFixed(2)}
                     </dd>
                   </div>
                 </dl>

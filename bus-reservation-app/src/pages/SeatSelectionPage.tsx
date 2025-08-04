@@ -175,14 +175,19 @@ const SeatSelectionPage: React.FC = () => {
       return;
     }
 
-    // Navigate to registration page with booking data
+    const bookingData = {
+      tripId,
+      selectedSeats,
+      total: calculateTotal(),
+      trip: trip, // Incluir todos los datos del viaje
+    };
+
+    console.log("Datos del viaje enviados:", bookingData);
+
+    // Navigate to registration page with booking data including trip details
     navigate(`/registro/${tripId}`, {
       state: {
-        bookingData: {
-          tripId,
-          selectedSeats,
-          total: calculateTotal(),
-        },
+        bookingData,
       },
     });
   };
