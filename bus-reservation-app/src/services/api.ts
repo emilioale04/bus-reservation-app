@@ -393,3 +393,84 @@ export const processCompleteReservation = async (data: {
     throw error;
   }
 };
+
+/**
+ * Obtener información completa del viaje para facturas y emails
+ * Incluye fecha del viaje, número de bus, ruta, etc.
+ */
+export const getCompleteTripInfo = async (tripId: string): Promise<{
+  tripDate: string;
+  busNumber: string;
+  origin: string;
+  destination: string;
+  departureTime: string;
+  arrivalTime?: string;
+  price: number;
+}> => {
+  try {
+    console.log('🔄 Obteniendo información completa del viaje...', tripId);
+
+    const { data, error } = await supabase
+      .from('trips')
+      .select(`
+        trip_date,
+        schedule:schedules (
+          departure_time,
+          route:routes (
+            origin,
+            destination,
+            price,
+            duration_minutes
+          )
+        ),
+        bus:buses (
+          bus_number
+        )
+      `)
+      .eq('id', tripId)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('No se encontró información del viaje');
+    }
+
+    // Calcular hora de llegada aproximada
+    const schedule = data.schedule as any;
+    const bus = data.bus as any;
+    
+    const departureTime = schedule?.departure_time || '00:00';
+    const route = schedule?.route;
+    const durationMinutes = route?.duration_minutes || 0;
+    
+    let arrivalTime = '';
+    if (departureTime && durationMinutes > 0) {
+      const [hours, minutes] = departureTime.split(':').map(Number);
+      const departureDate = new Date();
+      departureDate.setHours(hours, minutes, 0, 0);
+      
+      const arrivalDate = new Date(departureDate.getTime() + durationMinutes * 60 * 1000);
+      arrivalTime = arrivalDate.toTimeString().substring(0, 5); // HH:MM format
+    }
+
+    const tripInfo = {
+      tripDate: data.trip_date,
+      busNumber: bus?.bus_number || 'N/A',
+      origin: route?.origin || '',
+      destination: route?.destination || '',
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+      price: route?.price || 0
+    };
+
+    console.log('✅ Información del viaje obtenida:', tripInfo);
+    return tripInfo;
+
+  } catch (error) {
+    console.error('❌ Error obteniendo información del viaje:', error);
+    throw error;
+  }
+};

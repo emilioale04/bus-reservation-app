@@ -77,7 +77,7 @@ export interface Payment {
   id: string;
   reservation_id: string;
   amount: number;
-  payment_method: 'credit_card' | 'debit_card' | 'paypal';
+  payment_method: 'credit_card' | 'debit_card' | 'paypal' | 'transfer';
   card_last_four?: string;
   receipt_url?: string;
   status: 'pending' | 'completed' | 'failed';
@@ -90,7 +90,7 @@ export interface PaymentData {
   expiryDate: string;
   cvv: string;
   cardholderName: string;
-  paymentMethod: 'credit_card' | 'debit_card' | 'paypal';
+  paymentMethod: 'credit_card' | 'debit_card' | 'paypal' | 'transfer';
 }
 
 export interface ReservationState {

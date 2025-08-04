@@ -15,6 +15,8 @@ export interface EmailData {
   trip_origin: string;
   trip_destination: string;
   departure_date: string;
+  departure_time: string;
+  bus_number: string;
   seat_numbers: string;
   total_amount: string;
   passenger_name: string;
@@ -40,11 +42,13 @@ export const sendInvoiceEmail = async (emailData: EmailData): Promise<boolean> =
       invoice_url: emailData.invoice_url,
       trip_details: `${emailData.trip_origin} → ${emailData.trip_destination}`,
       departure_date: emailData.departure_date,
+      departure_time: emailData.departure_time,
+      bus_number: emailData.bus_number,
       seat_numbers: emailData.seat_numbers,
       total_amount: emailData.total_amount,
       passenger_name: emailData.passenger_name,
-      company_name: 'BusReserva',
-      support_email: 'soporte@busreserva.com'
+      company_name: 'CooperBus',
+      support_email: 'soporte@cooperbus.com'
     };
 
     // Enviar email usando EmailJS

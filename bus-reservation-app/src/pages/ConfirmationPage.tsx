@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, CreditCard, Download } from "lucide-react";
+import { Banknote, CheckCircle, Clock, CreditCard, Download } from "lucide-react";
 import React, { useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -31,13 +31,23 @@ interface BookingData {
       type: string;
     };
   };
+  tripInfo?: {
+    tripDate: string;
+    busNumber: string;
+    origin: string;
+    destination: string;
+    departureTime: string;
+    arrivalTime?: string;
+    price: number;
+  };
   passengerInfo: PassengerInfo;
   paymentData?: {
-    cardNumber: string;
-    expiryDate: string;
-    cvv: string;
-    cardholderName: string;
-    paymentMethod: 'credit_card' | 'debit_card';
+    cardNumber?: string;
+    expiryDate?: string;
+    cvv?: string;
+    cardholderName?: string;
+    paymentMethod: 'credit_card' | 'debit_card' | 'transfer';
+    transferReceiptName?: string;
   };
   confirmationCode?: string;
   invoiceUrl?: string;
@@ -61,6 +71,29 @@ const ConfirmationPage: React.FC = () => {
 
   // Memoizar displayData para evitar recreaciones innecesarias
   const displayData = useMemo(() => {
+    // Si tenemos tripInfo de la base de datos, usarlo preferentemente
+    if (bookingData?.tripInfo) {
+      return {
+        ...bookingData,
+        trip: {
+          schedule: {
+            route: {
+              origin: bookingData.tripInfo.origin,
+              destination: bookingData.tripInfo.destination,
+              price: bookingData.tripInfo.price,
+            },
+            departureTime: bookingData.tripInfo.departureTime,
+            arrivalTime: bookingData.tripInfo.arrivalTime || '',
+          },
+          bus: {
+            number: bookingData.tripInfo.busNumber,
+            type: "Ejecutivo", // Valor por defecto
+          },
+        },
+      };
+    }
+
+    // Si hay datos del trip original, usarlos
     if (bookingData?.trip) {
       return bookingData;
     }
@@ -75,8 +108,8 @@ const ConfirmationPage: React.FC = () => {
             destination: "Guayaquil",
             price: 15.5,
           },
-          departureTime: "2024-08-03T08:00:00",
-          arrivalTime: "2024-08-03T16:00:00",
+          departureTime: "08:00",
+          arrivalTime: "16:00",
         },
         bus: {
           number: "B001",
@@ -85,6 +118,9 @@ const ConfirmationPage: React.FC = () => {
       },
     };
   }, [bookingData]);
+
+  // Obtener la fecha del viaje de diferentes fuentes
+  const tripDate = bookingData?.tripInfo?.tripDate || null;
 
   const handleDownloadInvoice = () => {
     if (bookingData.invoiceUrl) {
@@ -97,6 +133,21 @@ const ConfirmationPage: React.FC = () => {
   }
 
   const formatDate = (dateString: string): string => {
+    if (!dateString) return 'Fecha no disponible';
+    
+    // Si es solo una fecha (YYYY-MM-DD), procesarla directamente
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month - 1 porque los meses en JS son 0-indexados
+      return date.toLocaleDateString("es-EC", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+    
+    // Si es una fecha completa con tiempo
     return new Date(dateString).toLocaleDateString("es-EC", {
       weekday: "long",
       year: "numeric",
@@ -106,10 +157,28 @@ const ConfirmationPage: React.FC = () => {
   };
 
   const formatTime = (timeString: string): string => {
-    return new Date(timeString).toLocaleTimeString("es-EC", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!timeString) return 'Hora no disponible';
+    
+    // Si es solo hora (HH:MM), devolverla directamente
+    if (timeString.match(/^\d{2}:\d{2}$/)) {
+      return timeString;
+    }
+    
+    // Si es solo hora con segundos (HH:MM:SS), devolver solo HH:MM
+    if (timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
+      return timeString.substring(0, 5); // Tomar solo HH:MM
+    }
+    
+    // Si es una fecha completa con tiempo (ISO format)
+    try {
+      return new Date(timeString).toLocaleTimeString("es-EC", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      console.error('Error formateando hora:', timeString, error);
+      return timeString; // Devolver el string original si hay error
+    }
   };
 
   const handleNewReservation = () => {
@@ -216,18 +285,51 @@ const ConfirmationPage: React.FC = () => {
                   Información de Pago
                 </h2>
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center mb-2">
-                    <CreditCard className="h-5 w-5 text-gray-400 mr-3" aria-hidden="true" />
-                    <span className="text-sm font-medium text-gray-700">
-                      {bookingData.paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'Tarjeta de Débito'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Terminada en: ****{bookingData.paymentData.cardNumber.slice(-4)}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Titular: {bookingData.paymentData.cardholderName}
-                  </p>
+                  {bookingData.paymentData.paymentMethod === 'transfer' ? (
+                    // Información para transferencia bancaria
+                    <>
+                      <div className="flex items-center mb-2">
+                        <Banknote className="h-5 w-5 text-gray-400 mr-3" aria-hidden="true" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Transferencia Bancaria
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Estado: Pago procesado exitosamente
+                      </p>
+                      {bookingData.paymentData.transferReceiptName && (
+                        <p className="text-sm text-gray-600">
+                          Comprobante: {bookingData.paymentData.transferReceiptName}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-600">
+                        Banco: Banco del Pacífico
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Beneficiario: CooperBus S.A.
+                      </p>
+                    </>
+                  ) : (
+                    // Información para tarjeta de crédito/débito
+                    <>
+                      <div className="flex items-center mb-2">
+                        <CreditCard className="h-5 w-5 text-gray-400 mr-3" aria-hidden="true" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {bookingData.paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'Tarjeta de Débito'}
+                        </span>
+                      </div>
+                      {bookingData.paymentData.cardNumber && (
+                        <p className="text-sm text-gray-600">
+                          Terminada en: ****{bookingData.paymentData.cardNumber.slice(-4)}
+                        </p>
+                      )}
+                      {bookingData.paymentData.cardholderName && (
+                        <p className="text-sm text-gray-600">
+                          Titular: {bookingData.paymentData.cardholderName}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               </section>
             )}
@@ -257,7 +359,13 @@ const ConfirmationPage: React.FC = () => {
                       Fecha y Hora de Salida
                     </h3>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {displayData.trip?.schedule?.departureTime ? (
+                      {tripDate && displayData.trip?.schedule?.departureTime ? (
+                        <>
+                          {formatDate(tripDate)}
+                          <br />
+                          {formatTime(displayData.trip.schedule.departureTime)}
+                        </>
+                      ) : displayData.trip?.schedule?.departureTime ? (
                         <>
                           {formatDate(displayData.trip.schedule.departureTime)}
                           <br />

@@ -1,9 +1,9 @@
-import { AlertCircle, Calendar, CreditCard, Lock, User } from 'lucide-react';
+import { AlertCircle, Banknote, Calendar, CreditCard, Lock, Upload, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Alert from '../components/Alert';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { processCompleteReservation } from '../services/api';
+import { getCompleteTripInfo, processCompleteReservation } from '../services/api';
 import { sendInvoiceEmail, updateSeatsAsReserved } from '../services/emailService';
 import {
   createInvoicesBucket,
@@ -48,6 +48,7 @@ interface FormErrors {
   expiryDate?: string;
   cvv?: string;
   cardholderName?: string;
+  transferReceipt?: string;
 }
 
 const PaymentPage: React.FC = () => {
@@ -60,9 +61,10 @@ const PaymentPage: React.FC = () => {
     expiryDate: '',
     cvv: '',
     cardholderName: '',
-    paymentMethod: 'credit_card' as 'credit_card' | 'debit_card'
+    paymentMethod: 'credit_card' as 'credit_card' | 'debit_card' | 'transfer'
   });
 
+  const [transferReceipt, setTransferReceipt] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -101,6 +103,11 @@ const PaymentPage: React.FC = () => {
 
   // Validación en tiempo real
   const validateField = (name: string, value: string): string | undefined => {
+    // Si es transferencia, solo validar el recibo
+    if (paymentData.paymentMethod === 'transfer') {
+      return undefined; // La validación del archivo se hace en validateForm
+    }
+
     switch (name) {
       case 'cardNumber': {
         const cleanNumber = value.replace(/\s/g, '');
@@ -138,6 +145,35 @@ const PaymentPage: React.FC = () => {
     return undefined;
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({
+          ...prev,
+          transferReceipt: 'Debe ser un archivo de imagen (JPG, PNG, etc.)'
+        }));
+        return;
+      }
+      
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          transferReceipt: 'El archivo no debe superar los 5MB'
+        }));
+        return;
+      }
+
+      setTransferReceipt(file);
+      setErrors(prev => ({
+        ...prev,
+        transferReceipt: undefined
+      }));
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let formattedValue = value;
@@ -166,12 +202,21 @@ const PaymentPage: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    Object.keys(paymentData).forEach(key => {
-      if (key !== 'paymentMethod') {
-        const error = validateField(key, paymentData[key as keyof typeof paymentData]);
-        if (error) newErrors[key as keyof FormErrors] = error;
+    
+    // Si es transferencia, solo validar que tenga el archivo
+    if (paymentData.paymentMethod === 'transfer') {
+      if (!transferReceipt) {
+        newErrors.transferReceipt = 'Debe subir el comprobante de transferencia';
       }
-    });
+    } else {
+      // Validar campos de tarjeta
+      Object.keys(paymentData).forEach(key => {
+        if (key !== 'paymentMethod') {
+          const error = validateField(key, paymentData[key as keyof typeof paymentData]);
+          if (error) newErrors[key as keyof FormErrors] = error;
+        }
+      });
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -216,9 +261,13 @@ const PaymentPage: React.FC = () => {
       await createInvoicesBucket();
       console.log('✅ Sistema de archivos configurado');
 
-      // Paso 4: Preparar datos para la factura
+      // Paso 4: Obtener información completa del viaje
+      setProcessingStep('Obteniendo información del viaje...');
+      const tripInfo = await getCompleteTripInfo(bookingData.tripId);
+      console.log('✅ Información del viaje obtenida:', tripInfo);
+
+      // Paso 5: Preparar datos para la factura
       setProcessingStep('Preparando factura...');
-      const displayData = getDisplayData();
       
       const invoiceData: InvoiceData = {
         reservationId: `RES-${Date.now()}`,
@@ -232,57 +281,69 @@ const PaymentPage: React.FC = () => {
           direccion: bookingData.passengerInfo.direccion
         },
         trip: {
-          origin: displayData.trip?.schedule?.route?.origin || 'Origen',
-          destination: displayData.trip?.schedule?.route?.destination || 'Destino',
-          departureTime: displayData.trip?.schedule?.departureTime || new Date().toISOString(),
-          busNumber: displayData.trip?.bus?.number || 'N/A',
-          busType: displayData.trip?.bus?.type || 'N/A'
+          origin: tripInfo.origin,
+          destination: tripInfo.destination,
+          departureTime: tripInfo.departureTime,
+          tripDate: tripInfo.tripDate,
+          busNumber: tripInfo.busNumber,
+          busType: 'Ejecutivo' // Valor por defecto ya que no tenemos este campo en la BD
         },
         seats: bookingData.selectedSeats,
         total: bookingData.total,
-        paymentMethod: paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'Tarjeta de Débito',
-        cardLastFour: paymentData.cardNumber.slice(-4),
+        paymentMethod: paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 
+                      paymentData.paymentMethod === 'debit_card' ? 'Tarjeta de Débito' : 
+                      'Transferencia Bancaria',
+        cardLastFour: paymentData.paymentMethod !== 'transfer' ? paymentData.cardNumber.slice(-4) : undefined,
         createdAt: new Date().toISOString()
       };
 
-      // Paso 5: Generar PDF
+      // Paso 6: Generar PDF
       setProcessingStep('Generando factura...');
       const pdfBuffer = generateInvoicePDF(invoiceData);
       console.log('✅ PDF generado exitosamente');
 
-      // Paso 6: Subir factura a Storage
+      // Paso 7: Subir factura a Storage
       setProcessingStep('Subiendo factura...');
       const invoiceUrl = await uploadInvoiceToStorage(pdfBuffer, invoiceData.reservationId);
       console.log('✅ Factura subida:', invoiceUrl);
 
-      // Paso 7: Guardar reserva, pasajero y pago en base de datos
+      // Paso 8: Guardar reserva, pasajero y pago en base de datos
       setProcessingStep('Guardando reserva en base de datos...');
       const reservationResult = await processCompleteReservation({
         tripId: bookingData.tripId,
         passengerInfo: bookingData.passengerInfo,
         selectedSeats: bookingData.selectedSeats,
         total: bookingData.total,
-        paymentMethod: paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'Tarjeta de Débito',
+        paymentMethod: paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 
+                      paymentData.paymentMethod === 'debit_card' ? 'Tarjeta de Débito' : 
+                      'Transferencia Bancaria',
         confirmationCode: generatedCode,
         receiptUrl: invoiceUrl
       });
       console.log('✅ Reserva guardada en base de datos:', reservationResult);
 
-      // Paso 8: Actualizar asientos como reservados
+      // Paso 9: Actualizar asientos como reservados
       setProcessingStep('Reservando asientos...');
       await updateSeatsAsReserved(bookingData.tripId, bookingData.selectedSeats);
       console.log('✅ Asientos reservados exitosamente');
 
-      // Paso 9: Enviar email con factura
+      // Paso 10: Enviar email con factura
       setProcessingStep('Enviando confirmación por email...');
       const emailSent = await sendInvoiceEmail({
         to_email: bookingData.passengerInfo.email,
         to_name: `${bookingData.passengerInfo.nombre} ${bookingData.passengerInfo.apellido}`,
         confirmation_code: generatedCode,
         invoice_url: invoiceUrl,
-        trip_origin: invoiceData.trip.origin,
-        trip_destination: invoiceData.trip.destination,
-        departure_date: new Date(invoiceData.trip.departureTime).toLocaleDateString('es-EC'),
+        trip_origin: tripInfo.origin,
+        trip_destination: tripInfo.destination,
+        departure_date: new Date(tripInfo.tripDate).toLocaleDateString('es-EC', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        departure_time: tripInfo.departureTime,
+        bus_number: tripInfo.busNumber,
         seat_numbers: bookingData.selectedSeats.join(', '),
         total_amount: bookingData.total.toFixed(2),
         passenger_name: `${bookingData.passengerInfo.nombre} ${bookingData.passengerInfo.apellido}`
@@ -290,13 +351,18 @@ const PaymentPage: React.FC = () => {
 
       console.log('✅ Proceso completado exitosamente');
 
-      // Paso 10: Navegar a confirmación con todos los datos procesados
+      // Paso 11: Navegar a confirmación con todos los datos procesados
       navigate('/confirmation', {
         state: {
           ...bookingData,
-          paymentData: {
+          // Agregar información completa del viaje obtenida de la base de datos
+          tripInfo: tripInfo,
+          paymentData: paymentData.paymentMethod !== 'transfer' ? {
             ...paymentData,
             cardNumber: `****-****-****-${paymentData.cardNumber.slice(-4)}`
+          } : {
+            paymentMethod: paymentData.paymentMethod,
+            transferReceiptName: transferReceipt?.name
           },
           confirmationCode: generatedCode,
           invoiceUrl: invoiceUrl,
@@ -433,10 +499,136 @@ const PaymentPage: React.FC = () => {
                       <CreditCard className="ml-3 h-5 w-5 text-gray-400" aria-hidden="true" />
                       <span className="ml-3 text-gray-900">Tarjeta de Débito</span>
                     </label>
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="transfer"
+                        checked={paymentData.paymentMethod === 'transfer'}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        aria-describedby="transfer-desc"
+                      />
+                      <Banknote className="ml-3 h-5 w-5 text-gray-400" aria-hidden="true" />
+                      <span className="ml-3 text-gray-900">Transferencia Bancaria</span>
+                    </label>
                   </div>
                 </fieldset>
 
-                {/* Información de la Tarjeta */}
+                {/* Información de Transferencia Bancaria */}
+                {paymentData.paymentMethod === 'transfer' && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Información para Transferencia Bancaria
+                    </h3>
+                    
+                    {/* Datos bancarios mock */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-semibold text-blue-900 mb-3">Datos para la Transferencia:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium text-blue-800">Banco:</p>
+                          <p className="text-blue-700">Banco del Pacífico</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-800">Tipo de Cuenta:</p>
+                          <p className="text-blue-700">Cuenta Corriente</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-800">Número de Cuenta:</p>
+                          <p className="text-blue-700 font-mono">1234567890</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-800">RUC:</p>
+                          <p className="text-blue-700 font-mono">1792345678001</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="font-medium text-blue-800">Beneficiario:</p>
+                          <p className="text-blue-700">CooperBus S.A.</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="font-medium text-blue-800">Monto a Transferir:</p>
+                          <p className="text-2xl font-bold text-blue-900">${displayData.total?.toFixed(2) || '0.00'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Instrucciones */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                      <h4 className="font-semibold text-yellow-800 mb-2">📝 Instrucciones:</h4>
+                      <ol className="list-decimal list-inside text-sm text-yellow-700 space-y-1">
+                        <li>Realice la transferencia por el monto exacto mostrado arriba</li>
+                        <li>En el concepto o referencia, incluya su nombre completo</li>
+                        <li>Tome una foto clara del comprobante de transferencia</li>
+                        <li>Suba la imagen del comprobante usando el campo de abajo</li>
+                        <li>Su reserva será confirmada automáticamente al subir el comprobante</li>
+                      </ol>
+                    </div>
+
+                    {/* Campo para subir comprobante */}
+                    <div>
+                      <label htmlFor="transferReceipt" className="block text-sm font-medium text-gray-700 mb-2">
+                        Comprobante de Transferencia <span className="text-red-500" aria-label="requerido">*</span>
+                      </label>
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400">
+                        <div className="space-y-1 text-center">
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="flex text-sm text-gray-600">
+                            <label
+                              htmlFor="transferReceipt"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                            >
+                              <span>Subir imagen</span>
+                              <input
+                                id="transferReceipt"
+                                name="transferReceipt"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="sr-only"
+                              />
+                            </label>
+                            <p className="pl-1">o arrastrar aquí</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, GIF hasta 5MB
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Mostrar archivo seleccionado */}
+                      {transferReceipt && (
+                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-sm font-medium text-green-800">
+                                Archivo seleccionado: {transferReceipt.name}
+                              </p>
+                              <p className="text-sm text-green-600">
+                                Tamaño: {(transferReceipt.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {errors.transferReceipt && (
+                        <p className="mt-2 text-sm text-red-600" role="alert">
+                          <AlertCircle className="inline h-4 w-4 mr-1" aria-hidden="true" />
+                          {errors.transferReceipt}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Información de la Tarjeta - Solo si no es transferencia */}
+                {paymentData.paymentMethod !== 'transfer' && (
                 <fieldset>
                   <legend className="text-lg font-medium text-gray-900 mb-4">
                     Información de la Tarjeta
@@ -579,6 +771,7 @@ const PaymentPage: React.FC = () => {
                     </div>
                   </div>
                 </fieldset>
+                )}
 
                 {/* Botones */}
                 <div className="mt-8 flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4">

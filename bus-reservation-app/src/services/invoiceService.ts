@@ -22,6 +22,7 @@ export interface InvoiceData {
     origin: string;
     destination: string;
     departureTime: string;
+    tripDate?: string; // Fecha del viaje por separado
     busNumber: string;
     busType: string;
   };
@@ -113,7 +114,28 @@ export const generateInvoicePDF = (data: InvoiceData): Uint8Array => {
   
   // Ruta con flecha correcta
   doc.text(`Ruta: ${data.trip.origin} → ${data.trip.destination}`, 20, 160);
-  doc.text(`Fecha y Hora: ${new Date(data.trip.departureTime).toLocaleString('es-EC')}`, 20, 167);
+  
+  // Formatear fecha y hora correctamente
+  const formatDateAndTime = (tripDate?: string, departureTime?: string): string => {
+    if (tripDate && departureTime) {
+      // Si tenemos fecha y hora por separado
+      const date = new Date(tripDate);
+      const formattedDate = date.toLocaleDateString('es-EC', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      return `${formattedDate} a las ${departureTime}`;
+    } else if (departureTime) {
+      // Si solo tenemos la hora, mostrar solo eso
+      return `Hora: ${departureTime}`;
+    } else {
+      return 'Fecha y hora no disponible';
+    }
+  };
+  
+  doc.text(`Fecha y Hora: ${formatDateAndTime(data.trip.tripDate, data.trip.departureTime)}`, 20, 167);
   
   // Solo mostrar información del bus si está disponible
   let currentY = 174;
@@ -485,6 +507,8 @@ export const sendInvoiceEmail = async (
       departure_date: tripData?.departureTime ? 
         new Date(tripData.departureTime).toLocaleString('es-EC') : 
         'Fecha por confirmar',
+      departure_time: tripData?.departureTime || 'Hora por confirmar',
+      bus_number: 'N/A', // No tenemos esta información en esta función
       seat_numbers: seatNumbers?.join(', ') || 'Asientos por confirmar',
       total_amount: totalAmount?.toFixed(2) || '0.00',
       passenger_name: passengerName
