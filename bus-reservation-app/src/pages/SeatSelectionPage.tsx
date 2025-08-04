@@ -388,12 +388,12 @@ const SeatSelectionPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Información del viaje */}
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1 order-2 xl:order-1">
             <div
-              className="bg-white rounded-lg shadow-md p-6 sticky top-4"
+              className="bg-white rounded-lg shadow-md p-4 sm:p-6 sticky top-4"
               role="complementary"
               aria-label="Información del viaje"
             >
@@ -542,11 +542,11 @@ const SeatSelectionPage: React.FC = () => {
           </div>
 
           {/* Mapa de asientos */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-6">
+          <div className="xl:col-span-2 order-1 xl:order-2">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0">
                 <h2
-                  className="text-lg font-semibold text-gray-900"
+                  className="text-lg font-semibold text-gray-900 text-center sm:text-left"
                   id="seat-map-title"
                 >
                   Selecciona tus Asientos
@@ -556,7 +556,7 @@ const SeatSelectionPage: React.FC = () => {
                   position="left"
                 >
                   <div
-                    className="text-sm text-gray-600 cursor-help"
+                    className="text-xs sm:text-sm text-gray-600 cursor-help text-center sm:text-right"
                     role="note"
                     aria-label="Límite de asientos"
                   >
@@ -580,7 +580,7 @@ const SeatSelectionPage: React.FC = () => {
 
               {/* Leyenda */}
               <div
-                className="flex justify-center space-x-6 mb-8"
+                className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-6 sm:mb-8"
                 role="legend"
                 aria-label="Leyenda de estados de asientos"
               >
@@ -593,7 +593,7 @@ const SeatSelectionPage: React.FC = () => {
                       className="w-4 h-4 bg-white border-2 border-gray-300 rounded mr-2"
                       aria-hidden="true"
                     ></div>
-                    <span className="text-sm text-gray-600">Disponible</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Disponible</span>
                   </div>
                 </Tooltip>
                 
@@ -606,7 +606,7 @@ const SeatSelectionPage: React.FC = () => {
                       className="w-4 h-4 bg-blue-600 border-2 border-blue-600 rounded mr-2"
                       aria-hidden="true"
                     ></div>
-                    <span className="text-sm text-gray-600">Seleccionado</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Seleccionado</span>
                   </div>
                 </Tooltip>
                 
@@ -619,7 +619,7 @@ const SeatSelectionPage: React.FC = () => {
                       className="w-4 h-4 bg-gray-300 border-2 border-gray-400 rounded mr-2"
                       aria-hidden="true"
                     ></div>
-                    <span className="text-sm text-gray-600">Ocupado</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Ocupado</span>
                   </div>
                 </Tooltip>
               </div>

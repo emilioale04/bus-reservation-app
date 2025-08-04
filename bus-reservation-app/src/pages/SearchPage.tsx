@@ -195,8 +195,8 @@ const SearchPage: React.FC = () => {
             }}
             role="search"
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <div className="w-full">
                 <label
                   htmlFor="origin-select"
                   className="block text-sm font-medium text-gray-700 mb-2"
@@ -240,7 +240,7 @@ const SearchPage: React.FC = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="w-full">
                 <label
                   htmlFor="destination-select"
                   className="block text-sm font-medium text-gray-700 mb-2"
@@ -286,7 +286,7 @@ const SearchPage: React.FC = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="w-full">
                 <label
                   htmlFor="date-input"
                   className="block text-sm font-medium text-gray-700 mb-2"
@@ -319,7 +319,7 @@ const SearchPage: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="w-full">
                 <button
                   type="submit"
                   disabled={
@@ -329,7 +329,7 @@ const SearchPage: React.FC = () => {
                     !filters.destination ||
                     !filters.date
                   }
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center min-h-[42px]"
                   aria-describedby="search-button-help"
                 >
                   <Search className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -367,21 +367,22 @@ const SearchPage: React.FC = () => {
             </button>
 
             {showAdvancedFilters && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                {/* Filtro de Asientos Mínimos - Diseño Compacto */}
-                <div className="max-w-md">
+              <div className="mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                {/* Filtro de Asientos Mínimos - Diseño Compacto y Responsive */}
+                <div className="w-full max-w-full">
                   <label
                     htmlFor="min-seats-slider"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
                     <Users className="inline h-4 w-4 mr-1" aria-hidden="true" />
-                    Asientos Mínimos Disponibles
+                    <span className="inline sm:hidden">Asientos Mín.</span>
+                    <span className="hidden sm:inline">Asientos Mínimos Disponibles</span>
                   </label>
                   
-                  {/* Slider y Input en una sola línea */}
-                  <div className="flex items-center space-x-4 mb-2">
+                  {/* Layout responsive: vertical en móvil, horizontal en desktop */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0 mb-2">
                     {/* Slider */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <input
                         id="min-seats-slider"
                         type="range"
@@ -396,13 +397,13 @@ const SearchPage: React.FC = () => {
                       {/* Marcadores compactos */}
                       <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
                         <span>1</span>
-                        <span>20</span>
+                        <span className="hidden xs:inline">20</span>
                         <span>40</span>
                       </div>
                     </div>
                     
                     {/* Input numérico compacto */}
-                    <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className="flex items-center justify-center sm:justify-start space-x-2 flex-shrink-0">
                       <input
                         type="number"
                         min="1"
@@ -412,7 +413,7 @@ const SearchPage: React.FC = () => {
                           const value = Math.max(1, Math.min(40, parseInt(e.target.value, 10) || 1));
                           handleMinSeatsChange(value);
                         }}
-                        className="w-14 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-16 sm:w-14 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center"
                         aria-label="Número exacto de asientos mínimos"
                       />
                       <span className="text-sm text-gray-500 whitespace-nowrap">asientos</span>
@@ -420,9 +421,15 @@ const SearchPage: React.FC = () => {
                   </div>
                   
                   {/* Texto explicativo compacto */}
-                  <div id="min-seats-help" className="text-xs text-gray-500">
-                    Solo viajes con al menos {filters.minAvailableSeats || 1} asientos disponibles
-                    {(filters.minAvailableSeats || 1) > 1 && " (ideal para grupos)"}
+                  <div id="min-seats-help" className="text-xs text-gray-500 text-center sm:text-left">
+                    <span className="inline sm:hidden">
+                      Mín. {filters.minAvailableSeats || 1} asientos
+                      {(filters.minAvailableSeats || 1) > 1 && " (grupos)"}
+                    </span>
+                    <span className="hidden sm:inline">
+                      Solo viajes con al menos {filters.minAvailableSeats || 1} asientos disponibles
+                      {(filters.minAvailableSeats || 1) > 1 && " (ideal para grupos)"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -477,48 +484,49 @@ const SearchPage: React.FC = () => {
                 </div>
 
                 <div
-                  className="grid gap-4"
+                  className="grid gap-3 sm:gap-4"
                   role="list"
                   aria-label="Lista de viajes disponibles"
                 >
                   {trips.map((trip, index) => (
                     <article
                       key={trip.id}
-                      className="bg-white rounded-lg shadow-md hover:shadow-lg focus-within:shadow-lg transition-shadow p-6"
+                      className="bg-white rounded-lg shadow-md hover:shadow-lg focus-within:shadow-lg transition-shadow p-4 sm:p-6"
                       role="listitem"
                       aria-labelledby={`trip-title-${index}`}
                       aria-describedby={`trip-details-${index}`}
                     >
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex-grow">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-600">
+                      <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:items-center lg:justify-between">
+                        <div className="flex-grow min-w-0">
+                          {/* Header responsive */}
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
+                            <div className="flex flex-col xs:flex-row xs:items-center xs:space-x-4 space-y-2 xs:space-y-0">
+                              <div className="text-center xs:text-left">
+                                <div className="text-xl sm:text-2xl font-bold text-blue-600">
                                   {formatDepartureTime(
                                     trip.schedule?.departure_time || ""
                                   )}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-xs sm:text-sm text-gray-500">
                                   Salida
                                 </div>
                               </div>
-                              <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">
+                              <div className="text-center xs:text-left">
+                                <div className="text-base sm:text-lg font-semibold text-gray-900">
                                   {formatDuration(
                                     trip.schedule?.route?.duration_minutes || 0
                                   )}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-xs sm:text-sm text-gray-500">
                                   Duración
                                 </div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="text-3xl font-bold text-green-600">
+                            <div className="text-center sm:text-right">
+                              <div className="text-2xl sm:text-3xl font-bold text-green-600">
                                 ${trip.schedule?.route?.price.toFixed(2)}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-xs sm:text-sm text-gray-500">
                                 por persona
                               </div>
                             </div>
@@ -526,24 +534,24 @@ const SearchPage: React.FC = () => {
 
                           <div
                             id={`trip-details-${index}`}
-                            className="flex items-center justify-between text-sm text-gray-600 mb-4"
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600 mb-4 space-y-2 sm:space-y-0"
                           >
-                            <div className="flex items-center">
+                            <div className="flex items-center justify-center sm:justify-start">
                               <MapPin
-                                className="h-4 w-4 mr-1"
+                                className="h-4 w-4 mr-1 flex-shrink-0"
                                 aria-hidden="true"
                               />
-                              <span>
+                              <span className="truncate">
                                 {trip.schedule?.route?.origin} →{" "}
                                 {trip.schedule?.route?.destination}
                               </span>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center justify-center sm:justify-end">
                               <Users
-                                className="h-4 w-4 mr-1"
+                                className="h-4 w-4 mr-1 flex-shrink-0"
                                 aria-hidden="true"
                               />
-                              <span>
+                              <span className="whitespace-nowrap">
                                 {trip.available_seats} asiento
                                 {trip.available_seats !== 1 ? "s" : ""}{" "}
                                 disponible
@@ -553,13 +561,14 @@ const SearchPage: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="lg:ml-6 lg:flex-shrink-0">
+                        <div className="lg:ml-6 lg:flex-shrink-0 w-full lg:w-auto">
                           <button
                             onClick={() => handleTripSelect(trip.id)}
-                            className="w-full lg:w-auto bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
+                            className="w-full lg:w-auto bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium text-sm sm:text-base"
                             aria-describedby={`trip-select-help-${index}`}
                           >
-                            Seleccionar Asientos
+                            <span className="inline sm:hidden">Seleccionar</span>
+                            <span className="hidden sm:inline">Seleccionar Asientos</span>
                           </button>
                           <div
                             id={`trip-select-help-${index}`}

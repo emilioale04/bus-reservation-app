@@ -439,9 +439,9 @@ const PaymentPage: React.FC = () => {
           />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Formulario de Pago */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <div className="bg-blue-600 px-6 py-4">
                 <h1 className="text-2xl font-bold text-white" id="payment-title">
@@ -508,7 +508,7 @@ const PaymentPage: React.FC = () => {
                     {/* Datos bancarios mock */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                       <h4 className="font-semibold text-blue-900 mb-3">Datos para la Transferencia:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                         <div>
                           <p className="font-medium text-blue-800">Banco:</p>
                           <p className="text-blue-700">Banco del Pacífico</p>
@@ -519,19 +519,19 @@ const PaymentPage: React.FC = () => {
                         </div>
                         <div>
                           <p className="font-medium text-blue-800">Número de Cuenta:</p>
-                          <p className="text-blue-700 font-mono">1234567890</p>
+                          <p className="text-blue-700 font-mono text-xs sm:text-sm break-all">1234567890</p>
                         </div>
                         <div>
                           <p className="font-medium text-blue-800">RUC:</p>
-                          <p className="text-blue-700 font-mono">1792345678001</p>
+                          <p className="text-blue-700 font-mono text-xs sm:text-sm break-all">1792345678001</p>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="sm:col-span-2">
                           <p className="font-medium text-blue-800">Beneficiario:</p>
                           <p className="text-blue-700">CooperBus S.A.</p>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="sm:col-span-2">
                           <p className="font-medium text-blue-800">Monto a Transferir:</p>
-                          <p className="text-2xl font-bold text-blue-900">${displayData.total?.toFixed(2) || '0.00'}</p>
+                          <p className="text-xl sm:text-2xl font-bold text-blue-900">${displayData.total?.toFixed(2) || '0.00'}</p>
                         </div>
                       </div>
                     </div>
@@ -553,9 +553,9 @@ const PaymentPage: React.FC = () => {
                       <label htmlFor="transferReceipt" className="block text-sm font-medium text-gray-700 mb-2">
                         Comprobante de Transferencia <span className="text-red-500" aria-label="requerido">*</span>
                       </label>
-                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400">
+                      <div className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400">
                         <div className="space-y-1 text-center">
-                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                           <div className="flex text-sm text-gray-600">
                             <label
                               htmlFor="transferReceipt"
@@ -652,7 +652,7 @@ const PaymentPage: React.FC = () => {
                     </div>
 
                     {/* Fecha de Expiración y CVV */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-2">
                           Fecha de Expiración <span className="text-red-500" aria-label="requerido">*</span>
@@ -764,23 +764,23 @@ const PaymentPage: React.FC = () => {
                 )}
 
                 {/* Botones */}
-                <div className="mt-8 flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
                   <button
                     type="button"
                     onClick={() => navigate(-1)}
-                    className="inline-flex justify-center items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="inline-flex justify-center items-center px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 shadow-sm text-sm sm:text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px]"
                   >
                     Volver
                   </button>
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex justify-center items-center px-4 sm:px-6 py-2.5 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {isLoading ? (
                       <>
                         <LoadingSpinner message="" />
-                        <span className="ml-2">{processingStep || 'Procesando...'}</span>
+                        <span className="ml-2 text-xs sm:text-sm">{processingStep || 'Procesando...'}</span>
                       </>
                     ) : (
                       `Pagar $${displayData.total?.toFixed(2) || '0.00'}`
@@ -792,36 +792,36 @@ const PaymentPage: React.FC = () => {
           </div>
 
           {/* Resumen de la Reserva */}
-          <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg overflow-hidden sticky top-8">
-              <div className="bg-gray-50 px-6 py-4">
+          <div className="xl:col-span-1">
+            <div className="bg-white shadow rounded-lg overflow-hidden lg:sticky lg:top-8">
+              <div className="bg-gray-50 px-4 sm:px-6 py-4">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Resumen de la Reserva
                 </h2>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Ruta</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-gray-900 break-words">
                     {displayData.trip?.schedule?.route?.origin} → {displayData.trip?.schedule?.route?.destination}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Asientos</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-gray-900">
                     {displayData.selectedSeats?.join(', ')}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Pasajero</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-gray-900 break-words">
                     {displayData.passengerInfo?.nombre} {displayData.passengerInfo?.apellido}
                   </p>
                 </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Total</span>
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-base sm:text-lg font-semibold text-gray-900">Total</span>
+                    <span className="text-xl sm:text-2xl font-bold text-blue-600">
                       ${displayData.total?.toFixed(2) || '0.00'}
                     </span>
                   </div>

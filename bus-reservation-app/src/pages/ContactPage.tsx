@@ -61,7 +61,7 @@ const ContactPage: React.FC = () => {
             className="mb-8"
           />
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
             
             {/* Contact Information */}
             <div>
@@ -135,7 +135,7 @@ const ContactPage: React.FC = () => {
 
             {/* Contact Form */}
             <div>
-              <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">
                   Envíanos un Mensaje
                 </h2>
@@ -149,11 +149,12 @@ const ContactPage: React.FC = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                         <User className="h-4 w-4 inline mr-1" />
                         Nombre Completo
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <input
                         type="text"
@@ -162,7 +163,7 @@ const ContactPage: React.FC = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
                         placeholder="Tu nombre completo"
                       />
                     </div>
@@ -171,6 +172,7 @@ const ContactPage: React.FC = () => {
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                         <Mail className="h-4 w-4 inline mr-1" />
                         Correo Electrónico
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <input
                         type="email"
@@ -179,7 +181,7 @@ const ContactPage: React.FC = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
                         placeholder="tu@email.com"
                       />
                     </div>
@@ -189,14 +191,16 @@ const ContactPage: React.FC = () => {
                     <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
                       <FileText className="h-4 w-4 inline mr-1" />
                       Asunto
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
+                    
                     <select
                       id="subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
                     >
                       <option value="">Selecciona un asunto</option>
                       <option value="reserva">Consulta sobre Reservas</option>
@@ -206,12 +210,14 @@ const ContactPage: React.FC = () => {
                       <option value="reclamo">Reclamo o Sugerencia</option>
                       <option value="otros">Otros</option>
                     </select>
+                    
                   </div>
 
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                       <MessageCircle className="h-4 w-4 inline mr-1" />
                       Mensaje
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
                     <textarea
                       id="message"
@@ -220,7 +226,7 @@ const ContactPage: React.FC = () => {
                       onChange={handleChange}
                       required
                       rows={6}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       placeholder="Escribe tu mensaje aquí..."
                     />
                   </div>
@@ -228,17 +234,17 @@ const ContactPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full bg-blue-600 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
                   >
                     {isSubmitting ? (
                       <>
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        Enviando...
+                        <span className="text-sm sm:text-base">Enviando...</span>
                       </>
                     ) : (
                       <>
                         <Send className="h-5 w-5 mr-2" />
-                        Enviar Mensaje
+                        <span className="text-sm sm:text-base">Enviar Mensaje</span>
                       </>
                     )}
                   </button>
@@ -256,9 +262,9 @@ const ContactPage: React.FC = () => {
             Preguntas Frecuentes
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-6 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   ¿Cómo puedo cambiar mi reserva?
                 </h3>
@@ -290,8 +296,8 @@ const ContactPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   ¿Puedo viajar con mascotas?
                 </h3>

@@ -1,49 +1,88 @@
 @import "tailwindcss";
 
+/* Estilos base para responsividad y zoom */
+html {
+  font-size: clamp(14px, 2.5vw, 16px);
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Contenedores responsive */
+.container-responsive {
+  width: 100%;
+  max-width: min(1280px, 95vw);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+}
+
+/* Touch targets mínimos */
+button, 
+input[type="button"], 
+input[type="submit"], 
+input[type="reset"],
+a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Inputs responsive */
+input, select, textarea {
+  font-size: max(16px, 1rem); /* Previene zoom en iOS */
+}
+
 /* Estilos personalizados para el slider de filtros */
 .slider {
   outline: none;
+  min-height: 44px; /* Touch target */
+  padding: 20px 0; /* Área de toque ampliada */
 }
 
 .slider::-webkit-slider-thumb {
   appearance: none;
-  height: 20px;
-  width: 20px;
+  height: 24px;
+  width: 24px;
   border-radius: 50%;
   background: #3b82f6;
   cursor: pointer;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: all 0.2s ease-in-out;
 }
 
 .slider::-webkit-slider-thumb:hover {
   background: #2563eb;
   transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .slider::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
+  height: 20px;
+  width: 20px;
   border-radius: 50%;
   background: #3b82f6;
   cursor: pointer;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: all 0.2s ease-in-out;
 }
 
 .slider::-moz-range-thumb:hover {
   background: #2563eb;
   transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .slider:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .slider:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 /* Estilos para el track del slider */
@@ -58,4 +97,52 @@
   background: #e5e7eb;
   border-radius: 4px;
   border: none;
+}
+
+/* Utilidades para zoom alto */
+@media (max-width: 480px) {
+  .text-responsive {
+    font-size: clamp(0.875rem, 4vw, 1rem);
+  }
+  
+  .text-lg-responsive {
+    font-size: clamp(1rem, 5vw, 1.25rem);
+  }
+  
+  .text-xl-responsive {
+    font-size: clamp(1.125rem, 6vw, 1.5rem);
+  }
+  
+  .space-compact > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* Mejoras para accesibilidad en zoom alto */
+@media (max-resolution: 1dppx) and (max-width: 768px) {
+  body {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Estilos para modo oscuro si es necesario */
+@media (prefers-color-scheme: dark) {
+  .slider::-webkit-slider-track {
+    background: #374151;
+  }
+  
+  .slider::-moz-range-track {
+    background: #374151;
+  }
 }
