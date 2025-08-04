@@ -1,8 +1,96 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { MapPin, Clock, Shield, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MapPin, Clock, Shield, Users, Search, Calendar, AlertCircle } from 'lucide-react';
+import { getCityOptions } from '../services/api';
+import type { CityOption, SearchFilters } from '../types';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [searchForm, setSearchForm] = useState<SearchFilters>({
+    origin: '',
+    destination: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+
+  // Load cities on component mount
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const cityOptions = await getCityOptions();
+        setCities(cityOptions);
+      } catch (err) {
+        console.error('Error loading cities:', err);
+        setError('Error al cargar las ciudades disponibles');
+      } finally {
+        setIsLoadingCities(false);
+      }
+    };
+
+    loadCities();
+  }, []);
+
+  const handleInputChange = (field: keyof SearchFilters, value: string) => {
+    setSearchForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const validateForm = (): boolean => {
+    if (!searchForm.origin) {
+      setError('Por favor selecciona una ciudad de origen');
+      return false;
+    }
+    if (!searchForm.destination) {
+      setError('Por favor selecciona una ciudad de destino');
+      return false;
+    }
+    if (!searchForm.date) {
+      setError('Por favor selecciona una fecha');
+      return false;
+    }
+    if (searchForm.origin === searchForm.destination) {
+      setError('El origen y destino no pueden ser iguales');
+      return false;
+    }
+    
+    // Check if date is not in the past
+    const selectedDateString = searchForm.date;
+    const todayString = new Date().toISOString().split('T')[0];
+    
+    if (selectedDateString < todayString) {
+      setError('No puedes seleccionar una fecha anterior a hoy');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    // Create URL with search parameters
+    const searchParams = new URLSearchParams({
+      origin: searchForm.origin,
+      destination: searchForm.destination,
+      date: searchForm.date
+    });
+    
+    // Navigate to search page with parameters
+    navigate(`/search?${searchParams.toString()}`);
+  };
   return (
     <div>
       {/* Hero Section */}
@@ -37,50 +125,152 @@ const HomePage: React.FC = () => {
 
       {/* Búsqueda Rápida */}
       <section className="py-12 -mt-10 relative z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-xl p-6">
-            <h2 className="text-2xl font-semibold text-center text-gray-900 mb-6">
-              Encuentra tu próximo viaje
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Origen
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Seleccionar ciudad</option>
-                  <option>Quito</option>
-                  <option>Guayaquil</option>
-                  <option>Cuenca</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Destino
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Seleccionar ciudad</option>
-                  <option>Quito</option>
-                  <option>Guayaquil</option>
-                  <option>Cuenca</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha
-                </label>
-                <input 
-                  type="date" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              <div className="flex items-end">
-                <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium">
-                  Buscar
-                </button>
-              </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-2xl p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Encuentra tu próximo viaje
+              </h2>
+              <p className="text-gray-600">
+                Busca y reserva tu viaje en pocos clics
+              </p>
             </div>
+
+            {/* Error Alert */}
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSearch} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Origin */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    <MapPin className="inline h-4 w-4 mr-1 text-blue-600" />
+                    Ciudad de Origen
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  {isLoadingCities ? (
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 flex items-center">
+                      <LoadingSpinner size="sm" inline />
+                      <span className="ml-2 text-gray-500 text-sm">Cargando ciudades...</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={searchForm.origin}
+                      onChange={(e) => handleInputChange('origin', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900"
+                      required
+                    >
+                      <option value="">Seleccionar origen</option>
+                      {cities.map((city) => (
+                        <option 
+                          key={city.value} 
+                          value={city.value}
+                          disabled={city.value === searchForm.destination}
+                        >
+                          {city.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Destination */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    <MapPin className="inline h-4 w-4 mr-1 text-blue-600" />
+                    Ciudad de Destino
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  {isLoadingCities ? (
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 flex items-center">
+                      <LoadingSpinner size="sm" inline />
+                      <span className="ml-2 text-gray-500 text-sm">Cargando ciudades...</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={searchForm.destination}
+                      onChange={(e) => handleInputChange('destination', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900"
+                      required
+                    >
+                      <option value="">Seleccionar destino</option>
+                      {cities.map((city) => (
+                        <option 
+                          key={city.value} 
+                          value={city.value}
+                          disabled={city.value === searchForm.origin}
+                        >
+                          {city.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Date */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    <Calendar className="inline h-4 w-4 mr-1 text-blue-600" />
+                    Fecha de Viaje
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={searchForm.date}
+                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900"
+                    required
+                  />
+                </div>
+
+                {/* Search Button */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-transparent">
+                    Buscar
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || isLoadingCities}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <LoadingSpinner size="sm" inline />
+                        <span className="ml-2">Buscando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-5 w-5 mr-2" />
+                        Buscar Viajes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Search Tips */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <div className="flex items-start">
+                  <Shield className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-blue-800 mb-1">
+                      Consejos para tu búsqueda
+                    </h3>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Los precios pueden variar según la fecha y disponibilidad</li>
+                      <li>• Te recomendamos reservar con anticipación para mejores tarifas</li>
+                      <li>• Verifica los horarios de salida antes de confirmar tu reserva</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </section>
