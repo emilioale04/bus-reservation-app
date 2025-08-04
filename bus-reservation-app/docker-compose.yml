@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  bus-reservation-app:
+    image: emilioale04/bus-reservation-app:latest
+    container_name: bus-reservation-app-produccion
+    ports:
+      - "8080:80"
+    env_file:
+      - .env.local # Carga las variables desde el archivo .env.local en la misma carpeta

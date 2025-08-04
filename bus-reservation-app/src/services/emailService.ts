@@ -1,9 +1,9 @@
 import emailjs from '@emailjs/browser';
 import { supabase } from './supabase';
 
-const EMAIL_SERVICE_ID = 'service_busreserva'; 
-const EMAIL_TEMPLATE_ID = 'template_invoice'; 
-const EMAIL_PUBLIC_KEY = 'D3X-1CUTtFCWpIu7P'; 
+const EMAIL_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '__VITE_EMAILJS_SERVICE_ID__'; 
+const EMAIL_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '__VITE_EMAILJS_TEMPLATE_ID__'; 
+const EMAIL_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '__VITE_EMAILJS_PUBLIC_KEY__'; 
 
 emailjs.init(EMAIL_PUBLIC_KEY);
 
@@ -249,11 +249,11 @@ export const getEmailJSSetupInstructions = (): string => {
 1. Ve a https://www.emailjs.com/
 2. Crea una cuenta gratuita
 3. Crea un nuevo servicio (Service):
-   - ID: service_busreserva
+   - Obtén el Service ID
    - Proveedor: Gmail, Outlook, etc.
 
 4. Crea un template (Template):
-   - ID: template_invoice
+   - Obtén el Template ID
    - Variables requeridas:
      * to_email, to_name, confirmation_code
      * invoice_url, trip_details, departure_date
@@ -262,10 +262,14 @@ export const getEmailJSSetupInstructions = (): string => {
 
 5. Obtén tu Public Key desde el Dashboard
 
-6. Actualiza emailService.ts con tus credenciales:
-   - EMAIL_SERVICE_ID
-   - EMAIL_TEMPLATE_ID  
-   - EMAIL_PUBLIC_KEY
+6. Configura las variables de entorno en tu archivo .env:
+   VITE_EMAILJS_SERVICE_ID=tu_service_id
+   VITE_EMAILJS_TEMPLATE_ID=tu_template_id
+   VITE_EMAILJS_PUBLIC_KEY=tu_public_key
+
+📝 NOTA: Las variables con prefijo VITE_ son accesibles en el frontend.
+No pongas secretos sensibles en estas variables ya que serán visibles 
+en el código del cliente.
 
 EJEMPLO DE TEMPLATE HTML para EmailJS:
 (Usa las variables con doble llaves como placeholders)
