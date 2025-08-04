@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -7,8 +7,6 @@ import {
   Users,
   DollarSign,
   Check,
-  ChevronRight,
-  Home,
 } from "lucide-react";
 import type { Trip } from "../types";
 import {
@@ -16,8 +14,9 @@ import {
   getOccupiedSeats,
   formatDepartureTime,
 } from "../services/api";
-import LoadingSpinner from "../components/LoadingSpinner";
 import Alert from "../components/Alert";
+import Breadcrumb from "../components/Breadcrumb";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const SeatSelectionPage: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
@@ -364,29 +363,13 @@ const SeatSelectionPage: React.FC = () => {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Breadcrumbs */}
-          <nav aria-label="Navegación de páginas" className="mb-4">
-            <ol
-              className="flex items-center space-x-2 text-sm text-gray-500"
-              role="list"
-            >
-              <li role="listitem">
-                <Link
-                  to="/search"
-                  className="flex items-center hover:text-blue-600 transition-colors"
-                  aria-label="Ir a la página de búsqueda"
-                >
-                  <Home className="h-4 w-4 mr-1" aria-hidden="true" />
-                  Búsqueda
-                </Link>
-              </li>
-              <li role="listitem" className="flex items-center">
-                <ChevronRight className="h-4 w-4 mx-2" aria-hidden="true" />
-                <span aria-current="page" className="text-gray-900 font-medium">
-                  Selección de Asientos
-                </span>
-              </li>
-            </ol>
-          </nav>
+          <Breadcrumb 
+            items={[
+              { label: 'Inicio', href: '/' },
+              { label: 'Búsqueda', href: '/search' },
+              { label: 'Selección de Asientos', current: true }
+            ]}
+          />
 
           <div className="flex items-center">
             <button

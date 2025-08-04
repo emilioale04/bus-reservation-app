@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield, FileText, Clock, AlertTriangle } from 'lucide-react';
+import Breadcrumb from '../components/Breadcrumb';
 
 const TermsPage: React.FC = () => {
   return (
@@ -34,6 +35,15 @@ const TermsPage: React.FC = () => {
       {/* Terms Content */}
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Breadcrumbs */}
+          <Breadcrumb 
+            items={[
+              { label: 'Inicio', href: '/' },
+              { label: 'Términos y Condiciones', current: true }
+            ]}
+            className="mb-8"
+          />
           
           {/* Last Updated */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">

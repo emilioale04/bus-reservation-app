@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send, MessageCircle, User, FileText } from 'lucide-react';
+import Breadcrumb from '../components/Breadcrumb';
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -51,6 +52,15 @@ const ContactPage: React.FC = () => {
       {/* Contact Content */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumbs */}
+          <Breadcrumb 
+            items={[
+              { label: 'Inicio', href: '/' },
+              { label: 'Contacto', current: true }
+            ]}
+            className="mb-8"
+          />
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             
             {/* Contact Information */}

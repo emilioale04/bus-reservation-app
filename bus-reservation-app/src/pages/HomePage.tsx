@@ -124,7 +124,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Búsqueda Rápida */}
-      <section className="py-12 -mt-10 relative z-10">
+      <section className="pt-24 pb-12 -mt-10 relative z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-2xl p-8">
             <div className="text-center mb-8">
@@ -132,7 +132,7 @@ const HomePage: React.FC = () => {
                 Encuentra tu próximo viaje
               </h2>
               <p className="text-gray-600">
-                Busca y reserva tu viaje en pocos clics
+                Busca y reserva tu viaje
               </p>
             </div>
 

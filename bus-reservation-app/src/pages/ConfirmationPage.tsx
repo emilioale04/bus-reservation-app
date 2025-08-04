@@ -1,6 +1,6 @@
 import { Banknote, CheckCircle, Clock, CreditCard, Download } from "lucide-react";
 import React, { useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 interface PassengerInfo {
@@ -188,60 +188,6 @@ const ConfirmationPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumbs */}
-        <nav className="mb-8" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2 text-gray-500 text-sm">
-            <li>
-              <Link to="/" className="hover:text-gray-700">
-                Inicio
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link to="/search" className="hover:text-gray-700">
-                Búsqueda
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link
-                to={`/booking/${displayData.tripId}`}
-                className="hover:text-gray-700"
-              >
-                Selección de Asientos
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link
-                to={`/registro/${displayData.tripId}`}
-                className="hover:text-gray-700"
-              >
-                Registro
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link to="/payment" className="hover:text-gray-700">
-                Pago
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li aria-current="page" className="text-gray-900 font-medium">
-              Confirmación
-            </li>
-          </ol>
-        </nav>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {/* Encabezado de Éxito */}

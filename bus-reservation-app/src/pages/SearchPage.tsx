@@ -7,6 +7,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Alert from "../components/Alert";
+import Breadcrumb from "../components/Breadcrumb";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
     formatDepartureTime,
@@ -117,25 +118,12 @@ const SearchPage: React.FC = () => {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Breadcrumbs */}
-          <nav aria-label="Navegación por migas de pan" className="mb-4">
-            <ol className="flex items-center space-x-2 text-sm text-gray-500">
-              <li>
-                <a
-                  href="/"
-                  className="hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                  aria-label="Ir a página de inicio"
-                >
-                  Inicio
-                </a>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <span className="text-gray-900 font-medium" aria-current="page">
-                  Buscar Viajes
-                </span>
-              </li>
-            </ol>
-          </nav>
+          <Breadcrumb 
+            items={[
+              { label: 'Inicio', href: '/' },
+              { label: 'Búsqueda', current: true }
+            ]}
+          />
 
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">

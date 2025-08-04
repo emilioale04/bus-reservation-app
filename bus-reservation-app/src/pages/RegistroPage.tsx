@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import Breadcrumb from "../components/Breadcrumb";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 interface FormData {
@@ -148,39 +149,14 @@ const RegistroPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="mb-8" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2 text-gray-500 text-sm">
-            <li>
-              <a href="/" className="hover:text-gray-700">
-                Inicio
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <a href="/search" className="hover:text-gray-700">
-                Búsqueda
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <a href={`/booking/${tripId}`} className="hover:text-gray-700">
-                Selección de Asientos
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li aria-current="page" className="text-gray-900 font-medium">
-              Registro de Pasajero
-            </li>
-          </ol>
-        </nav>
-
-        <div className="bg-white shadow rounded-lg p-6">
+        <Breadcrumb
+          items={[
+            { label: 'Inicio', href: '/' },
+            { label: 'Búsqueda', href: '/search' },
+            { label: 'Selección de Asientos', href: `/booking/${tripId}` },
+            { label: 'Registro y Pago', current: true }
+          ]}
+        />        <div className="bg-white shadow rounded-lg p-6">
           <h1
             className="text-2xl font-bold text-gray-900 mb-6"
             id="registro-title"
