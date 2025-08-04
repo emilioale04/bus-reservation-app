@@ -25,12 +25,12 @@ const Header: React.FC = () => {
             >
               Buscar Viajes
             </Link>
-            <a 
-              href="#contact" 
+            <Link 
+              to="/contact" 
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
             >
               Contacto
-            </a>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
