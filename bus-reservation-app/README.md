@@ -1,69 +1,78 @@
-# React + TypeScript + Vite
+# 🚌 Bus Reservation App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web moderna para reservas de autobús construida con React, TypeScript, Tailwind CSS y Supabase.
 
-Currently, two official plugins are available:
+## ✨ Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🔍 Búsqueda de viajes por origen, destino y fecha
+- 💺 Selección interactiva de asientos
+- 📄 Generación automática de facturas en PDF
+- 📧 Envío de confirmaciones por email
+- 📱 Diseño completamente responsive
+- ♿ Accesibilidad web (WCAG)
 
-## Expanding the ESLint configuration
+## 🚀 Despliegue con Docker
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Opción 1: Usar imagen de Docker Hub (Recomendado)
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/emilioale04/bus-reservation-app.git
+cd bus-reservation-app/bus-reservation-app
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+# 2. Configurar variables de entorno
+cp .env.example .env.local
+# Editar .env.local con tus credenciales
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 3. Ejecutar con docker-compose
+docker-compose up -d
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+La aplicación estará disponible en: <http://localhost:8080>
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Opción 2: Construir imagen localmente
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# 1. Construir la imagen
+docker build -t bus-reservation-app .
+
+# 2. Ejecutar el contenedor
+docker run -p 8080:80 --env-file ./.env.local bus-reservation-app
 ```
+
+## ⚙️ Variables de Entorno
+
+Crea un archivo `.env.local` con:
+
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_clave_anonima
+VITE_EMAILJS_SERVICE_ID=tu_service_id
+VITE_EMAILJS_TEMPLATE_ID=tu_template_id
+VITE_EMAILJS_PUBLIC_KEY=tu_public_key
+```
+
+## 🛠️ Desarrollo Local
+
+```bash
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
+npm run dev
+```
+
+## 📦 Tecnologías
+
+- **Frontend**: React 19, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL)
+- **Email**: EmailJS
+- **PDF**: jsPDF, html2canvas
+- **Despliegue**: Docker, Nginx
+
+## 🔧 Scripts Disponibles
+
+- `npm run dev` - Servidor de desarrollo
+- `npm run build` - Construir para producción
+- `npm run lint` - Ejecutar ESLint
+- `npm run init-supabase` - Configurar base de datos
