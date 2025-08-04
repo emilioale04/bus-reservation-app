@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   MapPin,
   Clock,
   Users,
@@ -17,6 +16,7 @@ import {
 import Alert from "../components/Alert";
 import Breadcrumb from "../components/Breadcrumb";
 import LoadingSpinner from "../components/LoadingSpinner";
+import Tooltip from "../components/Tooltip";
 
 const SeatSelectionPage: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
@@ -372,14 +372,6 @@ const SeatSelectionPage: React.FC = () => {
           />
 
           <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1 transition-colors mr-4"
-              aria-label="Volver a la página anterior"
-            >
-              <ArrowLeft className="h-5 w-5 mr-1" aria-hidden="true" />
-              Volver
-            </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Selección de Asientos
@@ -451,9 +443,14 @@ const SeatSelectionPage: React.FC = () => {
                       aria-hidden="true"
                     />
                     <div>
-                      <div className="font-medium text-gray-900">
-                        {trip.available_seats} disponibles
-                      </div>
+                      <Tooltip 
+                        content="Los asientos disponibles se actualizan en tiempo real y pueden cambiar si otros usuarios realizan reservas simultáneamente."
+                        position="right"
+                      >
+                        <div className="font-medium text-gray-900 cursor-help">
+                          {trip.available_seats} disponibles
+                        </div>
+                      </Tooltip>
                       <div className="text-sm text-gray-500">
                         de {TOTAL_SEATS} asientos
                       </div>
@@ -554,13 +551,18 @@ const SeatSelectionPage: React.FC = () => {
                 >
                   Selecciona tus Asientos
                 </h2>
-                <div
-                  className="text-sm text-gray-600"
-                  role="note"
-                  aria-label="Límite de asientos"
+                <Tooltip 
+                  content="Este límite garantiza que otros pasajeros tengan oportunidad de realizar reservas y mantiene un proceso ágil."
+                  position="left"
                 >
-                  Máximo {MAX_SEATS_PER_RESERVATION} asientos por reserva
-                </div>
+                  <div
+                    className="text-sm text-gray-600 cursor-help"
+                    role="note"
+                    aria-label="Límite de asientos"
+                  >
+                    Máximo {MAX_SEATS_PER_RESERVATION} asientos por reserva
+                  </div>
+                </Tooltip>
               </div>
 
               {/* Instrucciones de accesibilidad */}
@@ -582,27 +584,44 @@ const SeatSelectionPage: React.FC = () => {
                 role="legend"
                 aria-label="Leyenda de estados de asientos"
               >
-                <div className="flex items-center">
-                  <div
-                    className="w-4 h-4 bg-white border-2 border-gray-300 rounded mr-2"
-                    aria-hidden="true"
-                  ></div>
-                  <span className="text-sm text-gray-600">Disponible</span>
-                </div>
-                <div className="flex items-center">
-                  <div
-                    className="w-4 h-4 bg-blue-600 border-2 border-blue-600 rounded mr-2"
-                    aria-hidden="true"
-                  ></div>
-                  <span className="text-sm text-gray-600">Seleccionado</span>
-                </div>
-                <div className="flex items-center">
-                  <div
-                    className="w-4 h-4 bg-gray-300 border-2 border-gray-400 rounded mr-2"
-                    aria-hidden="true"
-                  ></div>
-                  <span className="text-sm text-gray-600">Ocupado</span>
-                </div>
+                <Tooltip 
+                  content="Estos asientos están libres y puedes seleccionarlos para tu reserva."
+                  position="top"
+                >
+                  <div className="flex items-center cursor-help">
+                    <div
+                      className="w-4 h-4 bg-white border-2 border-gray-300 rounded mr-2"
+                      aria-hidden="true"
+                    ></div>
+                    <span className="text-sm text-gray-600">Disponible</span>
+                  </div>
+                </Tooltip>
+                
+                <Tooltip 
+                  content="Estos son los asientos que elegiste. Haz clic de nuevo para deseleccionarlos."
+                  position="top"
+                >
+                  <div className="flex items-center cursor-help">
+                    <div
+                      className="w-4 h-4 bg-blue-600 border-2 border-blue-600 rounded mr-2"
+                      aria-hidden="true"
+                    ></div>
+                    <span className="text-sm text-gray-600">Seleccionado</span>
+                  </div>
+                </Tooltip>
+                
+                <Tooltip 
+                  content="Estos asientos ya fueron reservados por otros pasajeros y no están disponibles."
+                  position="top"
+                >
+                  <div className="flex items-center cursor-help">
+                    <div
+                      className="w-4 h-4 bg-gray-300 border-2 border-gray-400 rounded mr-2"
+                      aria-hidden="true"
+                    ></div>
+                    <span className="text-sm text-gray-600">Ocupado</span>
+                  </div>
+                </Tooltip>
               </div>
 
               {/* Estado actual de selección */}
@@ -626,13 +645,18 @@ const SeatSelectionPage: React.FC = () => {
 
               {/* Frente del bus */}
               <div className="text-center mb-4">
-                <div
-                  className="inline-block bg-gray-800 text-white px-4 py-2 rounded-md text-sm"
-                  role="img"
-                  aria-label="Indicador del frente del autobús"
+                <Tooltip 
+                  content="Esta es la parte delantera del autobús. Los asientos 1-4 están más cerca del conductor."
+                  position="bottom"
                 >
-                  Frente del Bus
-                </div>
+                  <div
+                    className="inline-block bg-gray-800 text-white px-4 py-2 rounded-md text-sm cursor-help"
+                    role="img"
+                    aria-label="Indicador del frente del autobús"
+                  >
+                    Frente del Bus
+                  </div>
+                </Tooltip>
               </div>
 
               {/* Mapa de asientos */}

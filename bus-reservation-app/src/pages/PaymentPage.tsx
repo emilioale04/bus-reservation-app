@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Alert from '../components/Alert';
 import Breadcrumb from '../components/Breadcrumb';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Tooltip from '../components/Tooltip';
 import { getCompleteTripInfo, processCompleteReservation } from '../services/api';
 import { sendInvoiceEmail, updateSeatsAsReserved } from '../services/emailService';
 import {
@@ -687,7 +688,14 @@ const PaymentPage: React.FC = () => {
 
                       <div>
                         <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-2">
-                          CVV <span className="text-red-500" aria-label="requerido">*</span>
+                          <Tooltip 
+                            content="El CVV es el código de seguridad de 3 dígitos que se encuentra en el reverso de tu tarjeta, junto a la firma. En tarjetas American Express son 4 dígitos en el frente."
+                            position="top"
+                          >
+                            <span className="cursor-help">
+                              CVV <span className="text-red-500" aria-label="requerido">*</span>
+                            </span>
+                          </Tooltip>
                         </label>
                         <div className="relative">
                           <input
