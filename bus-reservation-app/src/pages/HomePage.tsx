@@ -166,15 +166,13 @@ const HomePage: React.FC = () => {
                       required
                     >
                       <option value="">Seleccionar origen</option>
-                      {cities.map((city) => (
-                        <option 
-                          key={city.value} 
-                          value={city.value}
-                          disabled={city.value === searchForm.destination}
-                        >
-                          {city.label}
-                        </option>
-                      ))}
+                      {cities
+                        .filter((city) => city.value !== searchForm.destination)
+                        .map((city) => (
+                          <option key={city.value} value={city.value}>
+                            {city.label}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </div>
@@ -199,15 +197,13 @@ const HomePage: React.FC = () => {
                       required
                     >
                       <option value="">Seleccionar destino</option>
-                      {cities.map((city) => (
-                        <option 
-                          key={city.value} 
-                          value={city.value}
-                          disabled={city.value === searchForm.origin}
-                        >
-                          {city.label}
-                        </option>
-                      ))}
+                      {cities
+                        .filter((city) => city.value !== searchForm.origin)
+                        .map((city) => (
+                          <option key={city.value} value={city.value}>
+                            {city.label}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </div>

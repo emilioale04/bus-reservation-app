@@ -41,6 +41,10 @@ const SearchPage: React.FC = () => {
   const [isLoadingCities, setIsLoadingCities] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isAutoSearch, setIsAutoSearch] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
+  const [lastSearchFilters, setLastSearchFilters] = useState<SearchFilters | null>(null);
 
   const [filters, setFilters] = useState<SearchFilters>({
     origin: searchParams.get("origin") || "",
@@ -71,6 +75,7 @@ const SearchPage: React.FC = () => {
       filters.destination &&
       filters.date
     ) {
+      setIsAutoSearch(true);
       handleSearch();
     }
   }, [isLoadingCities]);
@@ -95,17 +100,39 @@ const SearchPage: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    setHasSearched(true);
+    
+    // Solo mostrar resultados si es una búsqueda iniciada por el usuario (no automática)
+    if (!isAutoSearch) {
+      setUserInitiatedSearch(true);
+      setHasSearched(true);
+      setShowResults(true);
+      // Guardar los filtros de la búsqueda actual para mostrar en los mensajes
+      setLastSearchFilters({ ...filters });
+    }
 
     try {
       const results = await searchTrips(filters);
       setTrips(results);
+      
+      // Para búsquedas automáticas, NO mostrar los mensajes de resultados
+      // Solo cargar los datos silenciosamente
     } catch (err) {
       console.error("Error searching trips:", err);
       setError("Error al buscar viajes. Por favor, inténtelo de nuevo.");
     } finally {
       setIsLoading(false);
+      setIsAutoSearch(false);
     }
+  };
+
+  const getCityName = (cityValue: string): string => {
+    const city = cities.find(c => c.value === cityValue);
+    return city ? city.label : cityValue;
+  };
+
+  // Función para obtener los filtros que se deben mostrar en los mensajes
+  const getDisplayFilters = (): SearchFilters => {
+    return lastSearchFilters || filters;
   };
 
   const handleTripSelect = (tripId: string) => {
@@ -156,7 +183,7 @@ const SearchPage: React.FC = () => {
             }}
             role="search"
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div>
                 <label
                   htmlFor="origin-select"
@@ -278,12 +305,9 @@ const SearchPage: React.FC = () => {
                   aria-describedby="date-help"
                   aria-invalid={hasSearched && !filters.date}
                 />
-                <div id="date-help" className="text-xs text-gray-500 mt-1">
-                  Seleccione una fecha dentro de los próximos 90 días
-                </div>
               </div>
 
-              <div className="flex items-end">
+              <div>
                 <button
                   type="submit"
                   disabled={
@@ -332,7 +356,7 @@ const SearchPage: React.FC = () => {
         )}
 
         {/* Mostrar resultados */}
-        {!isLoading && hasSearched && (
+        {!isLoading && userInitiatedSearch && showResults && (
           <div>
             {trips.length > 0 ? (
               <>
@@ -344,11 +368,11 @@ const SearchPage: React.FC = () => {
                     {trips.length} viaje{trips.length !== 1 ? "s" : ""}{" "}
                     encontrado{trips.length !== 1 ? "s" : ""} para{" "}
                     <span className="font-medium">
-                      {filters.origin} → {filters.destination}
+                      {getCityName(getDisplayFilters().origin)} → {getCityName(getDisplayFilters().destination)}
                     </span>{" "}
                     el{" "}
                     <span className="font-medium">
-                      {formatDate(filters.date)}
+                      {formatDate(getDisplayFilters().date)}
                     </span>
                   </p>
                 </div>
@@ -473,11 +497,11 @@ const SearchPage: React.FC = () => {
                 <p className="text-gray-600 mb-6">
                   No hay viajes disponibles para{" "}
                   <span className="font-medium">
-                    {filters.origin} → {filters.destination}
+                    {getCityName(getDisplayFilters().origin)} → {getCityName(getDisplayFilters().destination)}
                   </span>{" "}
                   el{" "}
                   <span className="font-medium">
-                    {formatDate(filters.date)}
+                    {formatDate(getDisplayFilters().date)}
                   </span>
                 </p>
                 <div className="space-y-2 text-gray-500">
@@ -491,7 +515,7 @@ const SearchPage: React.FC = () => {
         )}
 
         {/* Mensaje inicial cuando no se ha buscado nada */}
-        {!hasSearched && !isLoading && (
+        {!userInitiatedSearch && !isLoading && (
           <div className="text-center py-12">
             <div className="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
               <Search className="h-10 w-10 text-blue-600" />
