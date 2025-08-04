@@ -40,6 +40,9 @@ export const getCityOptions = async (): Promise<CityOption[]> => {
  * Servicio para buscar viajes basado en criterios de búsqueda
  */
 export const searchTrips = async (filters: SearchFilters): Promise<Trip[]> => {
+  // Aplicar filtro de asientos mínimos si está especificado
+  const minSeats = filters.minAvailableSeats || 1;
+  
   const { data, error } = await supabase
     .from('trips')
     .select(`
@@ -52,7 +55,7 @@ export const searchTrips = async (filters: SearchFilters): Promise<Trip[]> => {
     `)
     .eq('trip_date', filters.date)
     .eq('status', 'active')
-    .gte('available_seats', 1);
+    .gte('available_seats', minSeats);
 
   if (error) {
     console.error('Error searching trips:', error);

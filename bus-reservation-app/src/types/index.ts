@@ -106,6 +106,7 @@ export interface SearchFilters {
   origin: string;
   destination: string;
   date: string;
+  minAvailableSeats?: number;
 }
 
 // Interface para representar una opción de ciudad en los selectores

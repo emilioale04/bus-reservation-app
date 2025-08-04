@@ -1,7 +1,10 @@
 import {
     Calendar,
+    ChevronDown,
+    ChevronUp,
     MapPin,
     Search,
+    Settings,
     Users,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -45,11 +48,13 @@ const SearchPage: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [userInitiatedSearch, setUserInitiatedSearch] = useState(false);
   const [lastSearchFilters, setLastSearchFilters] = useState<SearchFilters | null>(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const [filters, setFilters] = useState<SearchFilters>({
     origin: searchParams.get("origin") || "",
     destination: searchParams.get("destination") || "",
     date: searchParams.get("date") || new Date().toISOString().split("T")[0],
+    minAvailableSeats: parseInt(searchParams.get("minSeats") || "1", 10),
   });
 
   useEffect(() => {
@@ -80,10 +85,17 @@ const SearchPage: React.FC = () => {
     }
   }, [isLoadingCities]);
 
-  const handleInputChange = (field: keyof SearchFilters, value: string) => {
+  const handleInputChange = (field: keyof SearchFilters, value: string | number) => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleMinSeatsChange = (value: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      minAvailableSeats: value,
     }));
   };
 
@@ -337,6 +349,85 @@ const SearchPage: React.FC = () => {
               </div>
             </div>
           </form>
+
+          {/* Filtros Avanzados */}
+          <div className="mt-6 border-t border-gray-200 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1"
+            >
+              <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
+              Filtros Avanzados
+              {showAdvancedFilters ? (
+                <ChevronUp className="h-4 w-4 ml-2" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-4 w-4 ml-2" aria-hidden="true" />
+              )}
+            </button>
+
+            {showAdvancedFilters && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                {/* Filtro de Asientos Mínimos - Diseño Compacto */}
+                <div className="max-w-md">
+                  <label
+                    htmlFor="min-seats-slider"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    <Users className="inline h-4 w-4 mr-1" aria-hidden="true" />
+                    Asientos Mínimos Disponibles
+                  </label>
+                  
+                  {/* Slider y Input en una sola línea */}
+                  <div className="flex items-center space-x-4 mb-2">
+                    {/* Slider */}
+                    <div className="flex-1">
+                      <input
+                        id="min-seats-slider"
+                        type="range"
+                        min="1"
+                        max="40"
+                        step="1"
+                        value={filters.minAvailableSeats || 1}
+                        onChange={(e) => handleMinSeatsChange(parseInt(e.target.value, 10))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        aria-describedby="min-seats-help"
+                      />
+                      {/* Marcadores compactos */}
+                      <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+                        <span>1</span>
+                        <span>20</span>
+                        <span>40</span>
+                      </div>
+                    </div>
+                    
+                    {/* Input numérico compacto */}
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <input
+                        type="number"
+                        min="1"
+                        max="40"
+                        value={filters.minAvailableSeats || 1}
+                        onChange={(e) => {
+                          const value = Math.max(1, Math.min(40, parseInt(e.target.value, 10) || 1));
+                          handleMinSeatsChange(value);
+                        }}
+                        className="w-14 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        aria-label="Número exacto de asientos mínimos"
+                      />
+                      <span className="text-sm text-gray-500 whitespace-nowrap">asientos</span>
+                    </div>
+                  </div>
+                  
+                  {/* Texto explicativo compacto */}
+                  <div id="min-seats-help" className="text-xs text-gray-500">
+                    Solo viajes con al menos {filters.minAvailableSeats || 1} asientos disponibles
+                    {(filters.minAvailableSeats || 1) > 1 && " (ideal para grupos)"}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mostrar errores */}
@@ -374,6 +465,14 @@ const SearchPage: React.FC = () => {
                     <span className="font-medium">
                       {formatDate(getDisplayFilters().date)}
                     </span>
+                    {(getDisplayFilters().minAvailableSeats || 1) > 1 && (
+                      <>
+                        {" "}con al menos{" "}
+                        <span className="font-medium">
+                          {getDisplayFilters().minAvailableSeats} asientos disponibles
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
 
@@ -503,10 +602,21 @@ const SearchPage: React.FC = () => {
                   <span className="font-medium">
                     {formatDate(getDisplayFilters().date)}
                   </span>
+                  {(getDisplayFilters().minAvailableSeats || 1) > 1 && (
+                    <>
+                      {" "}con al menos{" "}
+                      <span className="font-medium">
+                        {getDisplayFilters().minAvailableSeats} asientos disponibles
+                      </span>
+                    </>
+                  )}
                 </p>
                 <div className="space-y-2 text-gray-500">
                   <p>• Intente con una fecha diferente</p>
                   <p>• Verifique las ciudades seleccionadas</p>
+                  {(getDisplayFilters().minAvailableSeats || 1) > 1 && (
+                    <p>• Pruebe con menos asientos mínimos requeridos</p>
+                  )}
                   <p>• Consulte rutas alternativas</p>
                 </div>
               </div>
