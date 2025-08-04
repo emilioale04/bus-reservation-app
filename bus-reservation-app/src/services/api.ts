@@ -40,6 +40,9 @@ export const getCityOptions = async (): Promise<CityOption[]> => {
  * Servicio para buscar viajes basado en criterios de búsqueda
  */
 export const searchTrips = async (filters: SearchFilters): Promise<Trip[]> => {
+  // Aplicar filtro de asientos mínimos si está especificado
+  const minSeats = filters.minAvailableSeats || 1;
+  
   const { data, error } = await supabase
     .from('trips')
     .select(`
@@ -52,7 +55,7 @@ export const searchTrips = async (filters: SearchFilters): Promise<Trip[]> => {
     `)
     .eq('trip_date', filters.date)
     .eq('status', 'active')
-    .gte('available_seats', 1);
+    .gte('available_seats', minSeats);
 
   if (error) {
     console.error('Error searching trips:', error);
@@ -237,6 +240,168 @@ export const createOrUpdatePassenger = async (passengerData: {
 };
 
 /**
+ * Servicio para recalcular y sincronizar los asientos disponibles de un viaje
+ * basándose en la capacidad total del bus y los asientos ocupados
+ */
+export const syncTripAvailableSeats = async (tripId: string): Promise<void> => {
+  try {
+    console.log('🔄 Sincronizando asientos disponibles para el viaje:', tripId);
+
+    // Obtener información del viaje y el bus
+    const trip = await getTripById(tripId);
+    if (!trip) {
+      throw new Error('Viaje no encontrado');
+    }
+
+    // Obtener la capacidad total del bus
+    let totalSeats = 40; // Valor por defecto
+    
+    if (trip.bus && 'capacity' in trip.bus) {
+      totalSeats = (trip.bus as any).capacity;
+    }
+
+    // Obtener asientos ocupados
+    const occupiedSeats = await getOccupiedSeats(tripId);
+    const availableSeats = totalSeats - occupiedSeats.length;
+
+    // Actualizar el campo available_seats en la tabla trips
+    const { error } = await supabase
+      .from('trips')
+      .update({ available_seats: availableSeats })
+      .eq('id', tripId);
+
+    if (error) {
+      throw error;
+    }
+
+    console.log('✅ Asientos sincronizados:', {
+      tripId,
+      totalSeats,
+      occupiedSeats: occupiedSeats.length,
+      availableSeats
+    });
+  } catch (error) {
+    console.error('❌ Error sincronizando asientos:', error);
+    throw error;
+  }
+};
+
+/**
+ * Servicio para reservar asientos específicos
+ */
+export const reserveSeats = async (tripId: string, seatNumbers: number[], reservationId: string): Promise<void> => {
+  try {
+    console.log('🔄 Reservando asientos:', seatNumbers, 'para el viaje:', tripId);
+
+    // Verificar si algunos asientos ya existen para este viaje
+    const { data: existingSeats, error: fetchError } = await supabase
+      .from('seats')
+      .select('id, seat_number')
+      .eq('trip_id', tripId)
+      .in('seat_number', seatNumbers);
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    const existingSeatNumbers = (existingSeats || []).map(seat => seat.seat_number);
+    const seatsToUpdate = existingSeats || [];
+    const seatsToInsert = seatNumbers.filter(seatNumber => !existingSeatNumbers.includes(seatNumber));
+
+    // Actualizar asientos existentes
+    if (seatsToUpdate.length > 0) {
+      const updatePromises = seatsToUpdate.map(seat => 
+        supabase
+          .from('seats')
+          .update({
+            is_reserved: true,
+            reservation_id: reservationId
+          })
+          .eq('id', seat.id)
+      );
+
+      const updateResults = await Promise.all(updatePromises);
+      const updateError = updateResults.find(result => result.error);
+      if (updateError?.error) {
+        throw updateError.error;
+      }
+    }
+
+    // Insertar nuevos asientos
+    if (seatsToInsert.length > 0) {
+      const seatData = seatsToInsert.map(seatNumber => ({
+        trip_id: tripId,
+        seat_number: seatNumber,
+        is_reserved: true,
+        reservation_id: reservationId
+      }));
+
+      const { error: insertError } = await supabase
+        .from('seats')
+        .insert(seatData);
+
+      if (insertError) {
+        throw insertError;
+      }
+    }
+
+    console.log('✅ Asientos reservados exitosamente:', {
+      updated: seatsToUpdate.map(s => s.seat_number),
+      inserted: seatsToInsert,
+      total: seatNumbers
+    });
+  } catch (error) {
+    console.error('❌ Error reservando asientos:', error);
+    throw error;
+  }
+};
+
+/**
+ * Servicio para actualizar los asientos disponibles de un viaje
+ */
+export const updateTripAvailableSeats = async (tripId: string, seatsToReserve: number): Promise<void> => {
+  try {
+    console.log('🔄 Actualizando asientos disponibles para el viaje:', tripId, 'Asientos a reservar:', seatsToReserve);
+
+    // Primero obtener el número actual de asientos disponibles
+    const { data: currentTrip, error: fetchError } = await supabase
+      .from('trips')
+      .select('available_seats')
+      .eq('id', tripId)
+      .single();
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    if (!currentTrip) {
+      throw new Error('No se encontró el viaje especificado');
+    }
+
+    const newAvailableSeats = currentTrip.available_seats - seatsToReserve;
+
+    if (newAvailableSeats < 0) {
+      throw new Error('No hay suficientes asientos disponibles');
+    }
+
+    // Actualizar el número de asientos disponibles
+    const { error: updateError } = await supabase
+      .from('trips')
+      .update({ available_seats: newAvailableSeats })
+      .eq('id', tripId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    console.log('✅ Asientos disponibles actualizados:', currentTrip.available_seats, '->', newAvailableSeats);
+  } catch (error) {
+    console.error('❌ Error actualizando asientos disponibles:', error);
+    throw error;
+  }
+};
+
+/**
  * Servicio para crear una nueva reserva
  */
 export const createReservation = async (reservationData: {
@@ -342,6 +507,20 @@ export const processCompleteReservation = async (data: {
   try {
     console.log('🔄 Iniciando procesamiento completo de reserva...');
 
+    // Verificar disponibilidad de asientos antes de proceder
+    const occupiedSeats = await getOccupiedSeats(data.tripId);
+    const conflictingSeats = data.selectedSeats.filter(seat => occupiedSeats.includes(seat));
+    
+    if (conflictingSeats.length > 0) {
+      throw new Error(`Los siguientes asientos ya están ocupados: ${conflictingSeats.join(', ')}`);
+    }
+
+    // Verificar que hay suficientes asientos disponibles
+    const trip = await getTripById(data.tripId);
+    if (!trip || trip.available_seats < data.selectedSeats.length) {
+      throw new Error('No hay suficientes asientos disponibles para esta reserva');
+    }
+
     // Paso 1: Crear o actualizar pasajero
     const passengerId = await createOrUpdatePassenger({
       name: `${data.passengerInfo.nombre} ${data.passengerInfo.apellido}`,
@@ -366,7 +545,13 @@ export const processCompleteReservation = async (data: {
       confirmation_code: data.confirmationCode
     });
 
-    // Paso 3: Crear registro de pago
+    // Paso 3: Reservar asientos específicos
+    await reserveSeats(data.tripId, data.selectedSeats, reservationId);
+
+    // Paso 4: Sincronizar asientos disponibles del viaje
+    await syncTripAvailableSeats(data.tripId);
+
+    // Paso 5: Crear registro de pago
     const transactionId = generateTransactionId();
     const paymentId = await createPayment({
       reservation_id: reservationId,
@@ -390,6 +575,40 @@ export const processCompleteReservation = async (data: {
     };
   } catch (error) {
     console.error('❌ Error en processCompleteReservation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Función de utilidad para sincronizar todos los viajes activos
+ * Útil para corregir inconsistencias en los asientos disponibles
+ */
+export const syncAllTripsAvailableSeats = async (): Promise<void> => {
+  try {
+    console.log('🔄 Sincronizando asientos disponibles para todos los viajes activos...');
+
+    // Obtener todos los viajes activos
+    const { data: trips, error } = await supabase
+      .from('trips')
+      .select('id')
+      .eq('status', 'active');
+
+    if (error) {
+      throw error;
+    }
+
+    if (!trips || trips.length === 0) {
+      console.log('ℹ️ No hay viajes activos para sincronizar');
+      return;
+    }
+
+    // Sincronizar cada viaje
+    const syncPromises = trips.map(trip => syncTripAvailableSeats(trip.id));
+    await Promise.all(syncPromises);
+
+    console.log('✅ Sincronización completada para', trips.length, 'viajes');
+  } catch (error) {
+    console.error('❌ Error sincronizando todos los viajes:', error);
     throw error;
   }
 };

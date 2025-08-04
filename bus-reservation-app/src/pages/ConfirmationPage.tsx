@@ -1,6 +1,6 @@
 import { Banknote, CheckCircle, Clock, CreditCard, Download } from "lucide-react";
 import React, { useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 interface PassengerInfo {
@@ -188,60 +188,6 @@ const ConfirmationPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumbs */}
-        <nav className="mb-8" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2 text-gray-500 text-sm">
-            <li>
-              <Link to="/" className="hover:text-gray-700">
-                Inicio
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link to="/search" className="hover:text-gray-700">
-                Búsqueda
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link
-                to={`/booking/${displayData.tripId}`}
-                className="hover:text-gray-700"
-              >
-                Selección de Asientos
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link
-                to={`/registro/${displayData.tripId}`}
-                className="hover:text-gray-700"
-              >
-                Registro
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <Link to="/payment" className="hover:text-gray-700">
-                Pago
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li aria-current="page" className="text-gray-900 font-medium">
-              Confirmación
-            </li>
-          </ol>
-        </nav>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {/* Encabezado de Éxito */}
@@ -342,7 +288,7 @@ const ConfirmationPage: React.FC = () => {
               >
                 Detalles del Viaje
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-500">Ruta</h3>
@@ -414,7 +360,7 @@ const ConfirmationPage: React.FC = () => {
               >
                 Información del Pasajero
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-500">
@@ -464,8 +410,8 @@ const ConfirmationPage: React.FC = () => {
               >
                 Resumen de Pago
               </h2>
-              <div className="bg-gray-50 rounded-lg p-6">
-                <dl className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                <dl className="space-y-3 sm:space-y-4">
                   <div className="grid grid-cols-2 items-center py-3">
                     <dt className="text-gray-600">Precio por asiento</dt>
                     <dd className="text-right text-lg font-medium text-gray-900">
@@ -482,10 +428,10 @@ const ConfirmationPage: React.FC = () => {
                     </dd>
                   </div>
                   <div className="grid grid-cols-2 items-center py-4 border-t-2 border-gray-300">
-                    <dt className="text-xl font-semibold text-gray-900">
+                    <dt className="text-lg sm:text-xl font-semibold text-gray-900">
                       Total pagado
                     </dt>
-                    <dd className="text-right text-2xl font-bold text-green-600">
+                    <dd className="text-right text-xl sm:text-2xl font-bold text-green-600">
                       $
                       {displayData.total
                         ? displayData.total.toFixed(2)
@@ -503,14 +449,14 @@ const ConfirmationPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4 pt-6 border-t">
               <button
                 onClick={handleNewReservation}
-                className="inline-flex justify-center items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex justify-center items-center px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 shadow-sm text-sm sm:text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px]"
               >
                 Nueva Reserva
               </button>
               {bookingData.invoiceUrl && (
                 <button
                   onClick={handleDownloadInvoice}
-                  className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex justify-center items-center px-4 sm:px-6 py-2.5 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px]"
                 >
                   <Download className="mr-2 h-5 w-5" aria-hidden="true" />
                   Descargar Factura

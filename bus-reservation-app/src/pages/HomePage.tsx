@@ -1,8 +1,96 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { MapPin, Clock, Shield, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MapPin, Clock, Shield, Users, Search, Calendar, AlertCircle } from 'lucide-react';
+import { getCityOptions } from '../services/api';
+import type { CityOption, SearchFilters } from '../types';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [searchForm, setSearchForm] = useState<SearchFilters>({
+    origin: '',
+    destination: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+
+  // Load cities on component mount
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const cityOptions = await getCityOptions();
+        setCities(cityOptions);
+      } catch (err) {
+        console.error('Error loading cities:', err);
+        setError('Error al cargar las ciudades disponibles');
+      } finally {
+        setIsLoadingCities(false);
+      }
+    };
+
+    loadCities();
+  }, []);
+
+  const handleInputChange = (field: keyof SearchFilters, value: string) => {
+    setSearchForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const validateForm = (): boolean => {
+    if (!searchForm.origin) {
+      setError('Por favor selecciona una ciudad de origen');
+      return false;
+    }
+    if (!searchForm.destination) {
+      setError('Por favor selecciona una ciudad de destino');
+      return false;
+    }
+    if (!searchForm.date) {
+      setError('Por favor selecciona una fecha');
+      return false;
+    }
+    if (searchForm.origin === searchForm.destination) {
+      setError('El origen y destino no pueden ser iguales');
+      return false;
+    }
+    
+    // Check if date is not in the past
+    const selectedDateString = searchForm.date;
+    const todayString = new Date().toISOString().split('T')[0];
+    
+    if (selectedDateString < todayString) {
+      setError('No puedes seleccionar una fecha anterior a hoy');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    // Create URL with search parameters
+    const searchParams = new URLSearchParams({
+      origin: searchForm.origin,
+      destination: searchForm.destination,
+      date: searchForm.date
+    });
+    
+    // Navigate to search page with parameters
+    navigate(`/search?${searchParams.toString()}`);
+  };
   return (
     <div>
       {/* Hero Section */}
@@ -36,51 +124,159 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Búsqueda Rápida */}
-      <section className="py-12 -mt-10 relative z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-xl p-6">
-            <h2 className="text-2xl font-semibold text-center text-gray-900 mb-6">
-              Encuentra tu próximo viaje
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Origen
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Seleccionar ciudad</option>
-                  <option>Quito</option>
-                  <option>Guayaquil</option>
-                  <option>Cuenca</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Destino
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Seleccionar ciudad</option>
-                  <option>Quito</option>
-                  <option>Guayaquil</option>
-                  <option>Cuenca</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha
-                </label>
-                <input 
-                  type="date" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              <div className="flex items-end">
-                <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium">
-                  Buscar
-                </button>
-              </div>
+      <section className="pt-24 pb-12 -mt-10 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Encuentra tu próximo viaje
+              </h2>
+              <p className="text-gray-600">
+                Busca y reserva tu viaje
+              </p>
             </div>
+
+            {/* Error Alert */}
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSearch} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {/* Origin */}
+                <div className="space-y-2">
+                  <label htmlFor="origin-select" className="block text-sm font-semibold text-gray-700">
+                    <MapPin className="inline h-4 w-4 mr-1 text-blue-600" />
+                    Ciudad de Origen
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  {isLoadingCities ? (
+                    <div className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg bg-gray-50 flex items-center min-h-[44px]">
+                      <LoadingSpinner size="sm" inline />
+                      <span className="ml-2 text-gray-500 text-sm">Cargando ciudades...</span>
+                    </div>
+                  ) : (
+                    <select
+                      id="origin-select"
+                      value={searchForm.origin}
+                      onChange={(e) => handleInputChange('origin', e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 min-h-[44px]"
+                      aria-describedby="origin-hint"
+                      required
+                    >
+                      <option value="">Seleccionar origen</option>
+                      {cities
+                        .filter((city) => city.value !== searchForm.destination)
+                        .map((city) => (
+                          <option key={city.value} value={city.value}>
+                            {city.label}
+                          </option>
+                        ))}
+                    </select>
+                  )}
+                  <span id="origin-hint" className="sr-only">Seleccione su ciudad de origen</span>
+                </div>
+
+                {/* Destination */}
+                <div className="space-y-2">
+                  <label htmlFor="destination-select" className="block text-sm font-semibold text-gray-700">
+                    <MapPin className="inline h-4 w-4 mr-1 text-blue-600" />
+                    Ciudad de Destino
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  {isLoadingCities ? (
+                    <div className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg bg-gray-50 flex items-center min-h-[44px]">
+                      <LoadingSpinner size="sm" inline />
+                      <span className="ml-2 text-gray-500 text-sm">Cargando ciudades...</span>
+                    </div>
+                  ) : (
+                    <select
+                      id="destination-select"
+                      value={searchForm.destination}
+                      onChange={(e) => handleInputChange('destination', e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 min-h-[44px]"
+                      aria-describedby="destination-hint"
+                      required
+                    >
+                      <option value="">Seleccionar destino</option>
+                      {cities
+                        .filter((city) => city.value !== searchForm.origin)
+                        .map((city) => (
+                          <option key={city.value} value={city.value}>
+                            {city.label}
+                          </option>
+                        ))}
+                    </select>
+                  )}
+                  <span id="destination-hint" className="sr-only">Seleccione su ciudad de destino</span>
+                </div>
+
+                {/* Date */}
+                <div className="space-y-2">
+                  <label htmlFor="travel-date" className="block text-sm font-semibold text-gray-700">
+                    <Calendar className="inline h-4 w-4 mr-1 text-blue-600" />
+                    Fecha de Viaje
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    id="travel-date"
+                    type="date"
+                    value={searchForm.date}
+                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 min-h-[44px]"
+                    required
+                    aria-describedby="date-hint"
+                  />
+                  <span id="date-hint" className="sr-only">Seleccione la fecha de su viaje</span>
+                </div>
+
+                {/* Search Button */}
+                <div className="space-y-2">
+                  <label htmlFor="search-button" className="block text-sm font-semibold text-transparent">
+                    Buscar
+                  </label>
+                  <button
+                    id="search-button"
+                    type="submit"
+                    disabled={isSubmitting || isLoadingCities}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <LoadingSpinner size="sm" inline />
+                        <span className="ml-2">Buscando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-5 w-5 mr-2" />
+                        Buscar Viajes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Search Tips */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <div className="flex items-start">
+                  <Shield className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-blue-800 mb-1">
+                      Consejos para tu búsqueda
+                    </h3>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Los precios pueden variar según la fecha y disponibilidad</li>
+                      <li>• Te recomendamos reservar con anticipación para mejores tarifas</li>
+                      <li>• Verifica los horarios de salida antes de confirmar tu reserva</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </section>
@@ -98,7 +294,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="text-center p-6">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPin className="h-8 w-8 text-blue-600" />
@@ -147,7 +343,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
               { 
                 origin: 'Quito', 
@@ -172,7 +368,7 @@ const HomePage: React.FC = () => {
               },
             ].map((route, index) => (
               <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {route.origin} → {route.destination}
@@ -209,22 +405,22 @@ const HomePage: React.FC = () => {
       {/* Estadísticas */}
       <section className="py-16 bg-blue-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold mb-2">20+</div>
-              <div className="text-blue-200">Años de experiencia</div>
+              <div className="text-3xl sm:text-4xl font-bold mb-2">20+</div>
+              <div className="text-blue-200 text-sm sm:text-base">Años de experiencia</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">50+</div>
-              <div className="text-blue-200">Destinos</div>
+              <div className="text-3xl sm:text-4xl font-bold mb-2">50+</div>
+              <div className="text-blue-200 text-sm sm:text-base">Destinos</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">1M+</div>
-              <div className="text-blue-200">Pasajeros satisfechos</div>
+              <div className="text-3xl sm:text-4xl font-bold mb-2">1M+</div>
+              <div className="text-blue-200 text-sm sm:text-base">Pasajeros satisfechos</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">99%</div>
-              <div className="text-blue-200">Puntualidad</div>
+              <div className="text-3xl sm:text-4xl font-bold mb-2">99%</div>
+              <div className="text-blue-200 text-sm sm:text-base">Puntualidad</div>
             </div>
           </div>
         </div>
@@ -241,7 +437,7 @@ const HomePage: React.FC = () => {
           </p>
           <Link 
             to="/search" 
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center"
+            className="bg-blue-600 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center justify-center min-h-[44px]"
           >
             Reservar Ahora
           </Link>
