@@ -1,5 +1,6 @@
-import React from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { CheckCircle, Clock, CreditCard, Download } from "lucide-react";
+import React, { useEffect, useMemo } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 interface PassengerInfo {
@@ -31,6 +32,18 @@ interface BookingData {
     };
   };
   passengerInfo: PassengerInfo;
+  paymentData?: {
+    cardNumber: string;
+    expiryDate: string;
+    cvv: string;
+    cardholderName: string;
+    paymentMethod: 'credit_card' | 'debit_card';
+  };
+  confirmationCode?: string;
+  invoiceUrl?: string;
+  reservationId?: string;
+  emailSent?: boolean;
+  reservationComplete?: boolean;
 }
 
 const ConfirmationPage: React.FC = () => {
@@ -38,11 +51,16 @@ const ConfirmationPage: React.FC = () => {
   const navigate = useNavigate();
   const bookingData = location.state as BookingData;
 
-  // Debug: Imprimir los datos recibidos
-  console.log("Datos recibidos en ConfirmationPage:", bookingData);
+  // Si no hay datos o la reserva no está completa, redirigir
+  useEffect(() => {
+    if (!bookingData || !bookingData.reservationComplete) {
+      navigate("/");
+      return;
+    }
+  }, [bookingData, navigate]);
 
-  // Datos de respaldo para prueba si no hay datos reales
-  const getDisplayData = () => {
+  // Memoizar displayData para evitar recreaciones innecesarias
+  const displayData = useMemo(() => {
     if (bookingData?.trip) {
       return bookingData;
     }
@@ -66,15 +84,13 @@ const ConfirmationPage: React.FC = () => {
         },
       },
     };
-  };
+  }, [bookingData]);
 
-  const displayData = getDisplayData();
-
-  React.useEffect(() => {
-    if (!bookingData) {
-      navigate("/");
+  const handleDownloadInvoice = () => {
+    if (bookingData.invoiceUrl) {
+      window.open(bookingData.invoiceUrl, '_blank');
     }
-  }, [bookingData, navigate]);
+  };
 
   if (!bookingData) {
     return <LoadingSpinner message="Cargando información de la reserva..." />;
@@ -96,8 +112,8 @@ const ConfirmationPage: React.FC = () => {
     });
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleNewReservation = () => {
+    navigate('/');
   };
 
   return (
@@ -144,6 +160,14 @@ const ConfirmationPage: React.FC = () => {
             <li>
               <span className="mx-2">/</span>
             </li>
+            <li>
+              <Link to="/payment" className="hover:text-gray-700">
+                Pago
+              </Link>
+            </li>
+            <li>
+              <span className="mx-2">/</span>
+            </li>
             <li aria-current="page" className="text-gray-900 font-medium">
               Confirmación
             </li>
@@ -151,18 +175,63 @@ const ConfirmationPage: React.FC = () => {
         </nav>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          {/* Encabezado */}
-          <div className="bg-blue-600 px-6 py-4">
-            <h1
-              className="text-2xl font-bold text-white"
-              id="confirmation-title"
-            >
-              Resumen de la Reserva
+          {/* Encabezado de Éxito */}
+          <div className="bg-green-600 px-6 py-8 text-center">
+            <CheckCircle className="mx-auto h-16 w-16 text-white mb-4" aria-hidden="true" />
+            <h1 className="text-3xl font-bold text-white" id="confirmation-title">
+              ¡Reserva Confirmada!
             </h1>
+            <p className="mt-2 text-green-100">
+              Su pago ha sido procesado exitosamente
+            </p>
+            {bookingData.confirmationCode && (
+              <div className="mt-4 inline-block bg-white rounded-lg px-4 py-2 shadow-lg border-2 border-green-400">
+                <p className="text-sm text-gray-600">Código de Confirmación</p>
+                <p className="text-xl font-bold text-green-700">{bookingData.confirmationCode}</p>
+              </div>
+            )}
           </div>
 
           {/* Contenido */}
           <div className="p-6 space-y-8">
+            {/* Estado del Pago */}
+            <section className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" aria-hidden="true" />
+                <div>
+                  <h3 className="text-sm font-medium text-green-800">
+                    Pago Procesado Exitosamente
+                  </h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    Su reserva ha sido confirmada y la factura ha sido enviada a su email.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Información de Pago */}
+            {bookingData.paymentData && (
+              <section aria-labelledby="payment-info-heading">
+                <h2 id="payment-info-heading" className="text-xl font-semibold text-gray-900 mb-4">
+                  Información de Pago
+                </h2>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center mb-2">
+                    <CreditCard className="h-5 w-5 text-gray-400 mr-3" aria-hidden="true" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {bookingData.paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'Tarjeta de Débito'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Terminada en: ****{bookingData.paymentData.cardNumber.slice(-4)}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Titular: {bookingData.paymentData.cardholderName}
+                  </p>
+                </div>
+              </section>
+            )}
+
             {/* Detalles del Viaje */}
             <section aria-labelledby="trip-details-heading">
               <h2
@@ -306,9 +375,9 @@ const ConfirmationPage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 items-center py-4 border-t-2 border-gray-300">
                     <dt className="text-xl font-semibold text-gray-900">
-                      Total a pagar
+                      Total pagado
                     </dt>
-                    <dd className="text-right text-2xl font-bold text-blue-600">
+                    <dd className="text-right text-2xl font-bold text-green-600">
                       $
                       {displayData.total
                         ? displayData.total.toFixed(2)
@@ -325,17 +394,40 @@ const ConfirmationPage: React.FC = () => {
             {/* Botones de Acción */}
             <div className="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4 pt-6 border-t">
               <button
-                onClick={() => navigate("/")}
+                onClick={handleNewReservation}
                 className="inline-flex justify-center items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Volver al Inicio
+                Nueva Reserva
               </button>
-              <button
-                onClick={handlePrint}
-                className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Imprimir Reserva
-              </button>
+              {bookingData.invoiceUrl && (
+                <button
+                  onClick={handleDownloadInvoice}
+                  className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Download className="mr-2 h-5 w-5" aria-hidden="true" />
+                  Descargar Factura
+                </button>
+              )}
+            </div>
+
+            {/* Información adicional */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex">
+                <Clock className="h-5 w-5 text-blue-400 mt-0.5 mr-3" aria-hidden="true" />
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Información Importante
+                  </h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Su factura electrónica ha sido enviada a {displayData.passengerInfo.email}</li>
+                      <li>Presente su cédula y este código de confirmación en el terminal</li>
+                      <li>Llegue al terminal al menos 30 minutos antes de la salida</li>
+                      <li>Para cambios o cancelaciones, contacte nuestro servicio al cliente</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

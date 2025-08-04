@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
-import Alert from "../components/Alert";
 
 interface FormData {
   cedula: string;
@@ -124,7 +123,7 @@ const RegistroPage: React.FC = () => {
     try {
       // Aquí iría la lógica para enviar los datos al servidor
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulación
-      navigate("/confirmation", {
+      navigate("/payment", {
         state: {
           ...bookingData,
           passengerInfo: formData,

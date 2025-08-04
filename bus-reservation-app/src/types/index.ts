@@ -72,6 +72,26 @@ export interface Reservation {
   passenger?: Passenger;
 }
 
+export interface Payment {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  payment_method: 'credit_card' | 'debit_card' | 'paypal';
+  card_last_four?: string;
+  receipt_url?: string;
+  status: 'pending' | 'completed' | 'failed';
+  transaction_id: string;
+  created_at: string;
+}
+
+export interface PaymentData {
+  cardNumber: string;
+  expiryDate: string;
+  cvv: string;
+  cardholderName: string;
+  paymentMethod: 'credit_card' | 'debit_card' | 'paypal';
+}
+
 export interface ReservationState {
   selectedTrip: Trip | null;
   selectedSeats: number[];

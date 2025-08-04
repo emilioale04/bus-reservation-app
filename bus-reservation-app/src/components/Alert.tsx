@@ -1,14 +1,15 @@
+import { AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
 import React from 'react';
-import { AlertTriangle, CheckCircle, XCircle, Info } from 'lucide-react';
 
 interface AlertProps {
   type: 'success' | 'error' | 'warning' | 'info';
   title?: string;
   message: string;
   onClose?: () => void;
+  className?: string;
 }
 
-const Alert: React.FC<AlertProps> = ({ type, title, message, onClose }) => {
+const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, className = '' }) => {
   const getIcon = () => {
     switch (type) {
       case 'success':
@@ -49,7 +50,7 @@ const Alert: React.FC<AlertProps> = ({ type, title, message, onClose }) => {
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${getBackgroundColor()}`}>
+    <div className={`border rounded-lg p-4 ${getBackgroundColor()} ${className}`}>
       <div className="flex items-start">
         <div className="flex-shrink-0">
           {getIcon()}

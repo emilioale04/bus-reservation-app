@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import {
-  Search,
-  MapPin,
-  Users,
-  Calendar,
-  ChevronRight,
-  Home,
+    Calendar,
+    MapPin,
+    Search,
+    Users,
 } from "lucide-react";
-import type { SearchFilters, CityOption, Trip } from "../types";
-import {
-  getCityOptions,
-  searchTrips,
-  formatDepartureTime,
-  formatDuration,
-} from "../services/api";
-import LoadingSpinner from "../components/LoadingSpinner";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Alert from "../components/Alert";
+import LoadingSpinner from "../components/LoadingSpinner";
+import {
+    formatDepartureTime,
+    formatDuration,
+    getCityOptions,
+    searchTrips,
+} from "../services/api";
+import type { CityOption, SearchFilters, Trip } from "../types";
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
