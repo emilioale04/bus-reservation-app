@@ -768,7 +768,7 @@ const PaymentPage: React.FC = () => {
                 )}
 
                 {/* Botones */}
-                <div className="flex justify-between pt-4">
+                <div className="flex justify-between pt-16">
                   <button
                     type="button"
                     onClick={() => navigate(-1)}
