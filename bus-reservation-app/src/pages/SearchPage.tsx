@@ -496,7 +496,7 @@ const SearchPage: React.FC = () => {
                       key={trip.id}
                       className="bg-white rounded-lg shadow-md hover:shadow-lg focus-within:shadow-lg transition-shadow p-4 sm:p-6"
                       role="listitem"
-                      aria-labelledby={`trip-title-${index}`}
+                      aria-labelledby={`trip-time-${index}`}
                       aria-describedby={`trip-details-${index}`}
                     >
                       <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:items-center lg:justify-between">
@@ -505,7 +505,10 @@ const SearchPage: React.FC = () => {
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
                             <div className="flex flex-col xs:flex-row xs:items-center xs:space-x-4 space-y-2 xs:space-y-0">
                               <div className="text-center xs:text-left">
-                                <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                                <div 
+                                  id={`trip-time-${index}`}
+                                  className="text-xl sm:text-2xl font-bold text-blue-600"
+                                >
                                   {formatDepartureTime(
                                     trip.schedule?.departure_time || ""
                                   )}
@@ -568,22 +571,11 @@ const SearchPage: React.FC = () => {
                           <button
                             onClick={() => handleTripSelect(trip.id)}
                             className="w-full lg:w-auto bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium text-sm sm:text-base"
-                            aria-describedby={`trip-select-help-${index}`}
+                            aria-label={`Seleccionar asientos para el viaje de ${formatDepartureTime(trip.schedule?.departure_time || "")} por $${trip.schedule?.route?.price.toFixed(2)} dólares de ${trip.schedule?.route?.origin} a ${trip.schedule?.route?.destination}`}
                           >
                             <span className="inline sm:hidden">Seleccionar</span>
                             <span className="hidden sm:inline">Seleccionar Asientos</span>
                           </button>
-                          <div
-                            id={`trip-select-help-${index}`}
-                            className="sr-only"
-                          >
-                            Seleccionar asientos para el viaje de{" "}
-                            {formatDepartureTime(
-                              trip.schedule?.departure_time || ""
-                            )}
-                            por ${trip.schedule?.route?.price.toFixed(2)}{" "}
-                            dólares
-                          </div>
                         </div>
                       </div>
                     </article>
