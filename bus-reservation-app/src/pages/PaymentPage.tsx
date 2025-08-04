@@ -336,12 +336,16 @@ const PaymentPage: React.FC = () => {
         invoice_url: invoiceUrl,
         trip_origin: tripInfo.origin,
         trip_destination: tripInfo.destination,
-        departure_date: new Date(tripInfo.tripDate).toLocaleDateString('es-EC', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
+        departure_date: (() => {
+          const [year, month, day] = tripInfo.tripDate.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          return date.toLocaleDateString('es-EC', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        })(),
         departure_time: tripInfo.departureTime,
         bus_number: tripInfo.busNumber,
         seat_numbers: bookingData.selectedSeats.join(', '),
