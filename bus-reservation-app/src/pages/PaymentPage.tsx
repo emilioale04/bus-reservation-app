@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Alert from '../components/Alert';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { processCompleteReservation } from '../services/api';
 import { sendInvoiceEmail, updateSeatsAsReserved } from '../services/emailService';
 import {
   createInvoicesBucket,
@@ -254,12 +255,25 @@ const PaymentPage: React.FC = () => {
       const invoiceUrl = await uploadInvoiceToStorage(pdfBuffer, invoiceData.reservationId);
       console.log('✅ Factura subida:', invoiceUrl);
 
-      // Paso 7: Actualizar asientos como reservados
+      // Paso 7: Guardar reserva, pasajero y pago en base de datos
+      setProcessingStep('Guardando reserva en base de datos...');
+      const reservationResult = await processCompleteReservation({
+        tripId: bookingData.tripId,
+        passengerInfo: bookingData.passengerInfo,
+        selectedSeats: bookingData.selectedSeats,
+        total: bookingData.total,
+        paymentMethod: paymentData.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'Tarjeta de Débito',
+        confirmationCode: generatedCode,
+        receiptUrl: invoiceUrl
+      });
+      console.log('✅ Reserva guardada en base de datos:', reservationResult);
+
+      // Paso 8: Actualizar asientos como reservados
       setProcessingStep('Reservando asientos...');
       await updateSeatsAsReserved(bookingData.tripId, bookingData.selectedSeats);
       console.log('✅ Asientos reservados exitosamente');
 
-      // Paso 8: Enviar email con factura
+      // Paso 9: Enviar email con factura
       setProcessingStep('Enviando confirmación por email...');
       const emailSent = await sendInvoiceEmail({
         to_email: bookingData.passengerInfo.email,
@@ -276,7 +290,7 @@ const PaymentPage: React.FC = () => {
 
       console.log('✅ Proceso completado exitosamente');
 
-      // Paso 9: Navegar a confirmación con todos los datos procesados
+      // Paso 10: Navegar a confirmación con todos los datos procesados
       navigate('/confirmation', {
         state: {
           ...bookingData,
@@ -286,7 +300,7 @@ const PaymentPage: React.FC = () => {
           },
           confirmationCode: generatedCode,
           invoiceUrl: invoiceUrl,
-          reservationId: invoiceData.reservationId,
+          reservationId: reservationResult.reservationId, // Usar el ID real de la reserva
           emailSent: emailSent,
           reservationComplete: true // Bandera para indicar que todo está completado
         }

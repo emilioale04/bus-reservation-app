@@ -42,6 +42,7 @@ export interface Passenger {
   email: string;
   phone: string;
   address: string;
+  identification: string;
   created_at: string;
 }
 
