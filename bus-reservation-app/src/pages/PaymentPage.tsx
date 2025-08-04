@@ -413,6 +413,16 @@ const PaymentPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+          <div className="bg-white rounded-lg p-8 shadow-xl text-center">
+            <LoadingSpinner message="" />
+            <p className="mt-4 text-lg font-medium text-gray-900">{processingStep || 'Procesando...'}</p>
+            <p className="text-sm text-gray-600 mt-2">Por favor, no cierre ni actualice la página.</p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="mb-8" aria-label="Breadcrumb">
@@ -787,14 +797,7 @@ const PaymentPage: React.FC = () => {
                     disabled={isLoading}
                     className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoading ? (
-                      <>
-                        <LoadingSpinner message="" />
-                        <span className="ml-2">{processingStep || 'Procesando...'}</span>
-                      </>
-                    ) : (
-                      `Pagar $${displayData.total?.toFixed(2) || '0.00'}`
-                    )}
+                    {isLoading ? 'Procesando...' : `Pagar $${displayData.total?.toFixed(2) || '0.00'}`}
                   </button>
                 </div>
               </form>
@@ -817,7 +820,7 @@ const PaymentPage: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Asientos</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Números de Asiento</h3>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {displayData.selectedSeats?.join(', ')}
                   </p>

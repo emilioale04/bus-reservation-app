@@ -1,9 +1,9 @@
 import jsPDF from "jspdf";
 import {
-    checkSeatsAvailability,
-    sendInvoiceEmail as sendEmailViaEmailJS,
-    updateSeatsAsReserved,
-    type EmailData
+  checkSeatsAvailability,
+  sendInvoiceEmail as sendEmailViaEmailJS,
+  updateSeatsAsReserved,
+  type EmailData
 } from "./emailService";
 import { supabase } from "./supabase";
 
@@ -148,7 +148,7 @@ export const generateInvoicePDF = (data: InvoiceData): Uint8Array => {
     currentY += 7;
   }
   
-  doc.text(`Asientos: ${data.seats.join(', ')}`, 20, currentY);
+  doc.text(`Números de Asiento: ${data.seats.join(', ')}`, 20, currentY);
   currentY += 7;
   
   // Tabla de detalles de pago (ajustar posición Y basada en contenido anterior)
