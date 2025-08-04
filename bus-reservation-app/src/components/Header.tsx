@@ -48,7 +48,7 @@ const Header: React.FC = () => {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <Bus className="h-8 w-8 text-blue-600" />
+            <Bus className="h-8 w-8 text-blue-600" aria-hidden="true" />
             <span className="text-xl font-bold text-gray-900">CooperBus</span>
           </Link>
           
@@ -77,10 +77,12 @@ const Header: React.FC = () => {
           <div className="md:hidden">
             <button
               type="button"
+              id="mobile-menu-button"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-expanded={isMenuOpen}
-              aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-controls="mobile-menu"
+              aria-label={isMenuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
             >
               {isMenuOpen ? (
                 <X className="h-6 w-6" aria-hidden="true" />
@@ -94,10 +96,11 @@ const Header: React.FC = () => {
         {/* Mobile menu, show/hide based on menu state */}
         <div 
           ref={menuRef}
+          id="mobile-menu"
           className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'} bg-white pt-2 pb-4 space-y-1 border-t`}
           role="menu" 
           aria-orientation="vertical" 
-          aria-labelledby="mobile-menu"
+          aria-labelledby="mobile-menu-button"
         >
           <Link 
             to="/"

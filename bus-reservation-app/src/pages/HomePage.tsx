@@ -148,7 +148,7 @@ const HomePage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* Origin */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="origin-select" className="block text-sm font-semibold text-gray-700">
                     <MapPin className="inline h-4 w-4 mr-1 text-blue-600" />
                     Ciudad de Origen
                     <span className="text-red-500 ml-1">*</span>
@@ -160,9 +160,11 @@ const HomePage: React.FC = () => {
                     </div>
                   ) : (
                     <select
+                      id="origin-select"
                       value={searchForm.origin}
                       onChange={(e) => handleInputChange('origin', e.target.value)}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 min-h-[44px]"
+                      aria-describedby="origin-hint"
                       required
                     >
                       <option value="">Seleccionar origen</option>
@@ -175,11 +177,12 @@ const HomePage: React.FC = () => {
                         ))}
                     </select>
                   )}
+                  <span id="origin-hint" className="sr-only">Seleccione su ciudad de origen</span>
                 </div>
 
                 {/* Destination */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="destination-select" className="block text-sm font-semibold text-gray-700">
                     <MapPin className="inline h-4 w-4 mr-1 text-blue-600" />
                     Ciudad de Destino
                     <span className="text-red-500 ml-1">*</span>
@@ -191,9 +194,11 @@ const HomePage: React.FC = () => {
                     </div>
                   ) : (
                     <select
+                      id="destination-select"
                       value={searchForm.destination}
                       onChange={(e) => handleInputChange('destination', e.target.value)}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 min-h-[44px]"
+                      aria-describedby="destination-hint"
                       required
                     >
                       <option value="">Seleccionar destino</option>
@@ -206,31 +211,36 @@ const HomePage: React.FC = () => {
                         ))}
                     </select>
                   )}
+                  <span id="destination-hint" className="sr-only">Seleccione su ciudad de destino</span>
                 </div>
 
                 {/* Date */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="travel-date" className="block text-sm font-semibold text-gray-700">
                     <Calendar className="inline h-4 w-4 mr-1 text-blue-600" />
                     Fecha de Viaje
                     <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
+                    id="travel-date"
                     type="date"
                     value={searchForm.date}
                     onChange={(e) => handleInputChange('date', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 min-h-[44px]"
                     required
+                    aria-describedby="date-hint"
                   />
+                  <span id="date-hint" className="sr-only">Seleccione la fecha de su viaje</span>
                 </div>
 
                 {/* Search Button */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-transparent">
+                  <label htmlFor="search-button" className="block text-sm font-semibold text-transparent">
                     Buscar
                   </label>
                   <button
+                    id="search-button"
                     type="submit"
                     disabled={isSubmitting || isLoadingCities}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"

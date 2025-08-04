@@ -317,6 +317,9 @@ const SearchPage: React.FC = () => {
                   aria-describedby="date-help"
                   aria-invalid={hasSearched && !filters.date}
                 />
+                <div id="date-help" className="sr-only">
+                  Seleccione la fecha en que desea viajar
+                </div>
               </div>
 
               <div className="w-full">

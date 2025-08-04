@@ -468,6 +468,7 @@ const PaymentPage: React.FC = () => {
                       />
                       <CreditCard className="ml-3 h-5 w-5 text-gray-400" aria-hidden="true" />
                       <span className="ml-3 text-gray-900">Tarjeta de Crédito</span>
+                      <span id="credit-card-desc" className="sr-only">Pagar con tarjeta de crédito</span>
                     </label>
                     <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                       <input
@@ -481,6 +482,7 @@ const PaymentPage: React.FC = () => {
                       />
                       <CreditCard className="ml-3 h-5 w-5 text-gray-400" aria-hidden="true" />
                       <span className="ml-3 text-gray-900">Tarjeta de Débito</span>
+                      <span id="debit-card-desc" className="sr-only">Pagar con tarjeta de débito</span>
                     </label>
                     <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                       <input
@@ -494,6 +496,7 @@ const PaymentPage: React.FC = () => {
                       />
                       <Banknote className="ml-3 h-5 w-5 text-gray-400" aria-hidden="true" />
                       <span className="ml-3 text-gray-900">Transferencia Bancaria</span>
+                      <span id="transfer-desc" className="sr-only">Pagar con transferencia bancaria</span>
                     </label>
                   </div>
                 </fieldset>
@@ -550,9 +553,9 @@ const PaymentPage: React.FC = () => {
 
                     {/* Campo para subir comprobante */}
                     <div>
-                      <label htmlFor="transferReceipt" className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="block text-sm font-medium text-gray-700 mb-2">
                         Comprobante de Transferencia <span className="text-red-500" aria-label="requerido">*</span>
-                      </label>
+                      </div>
                       <div className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400">
                         <div className="space-y-1 text-center">
                           <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
@@ -569,11 +572,12 @@ const PaymentPage: React.FC = () => {
                                 accept="image/*"
                                 onChange={handleFileChange}
                                 className="sr-only"
+                                aria-describedby="file-upload-help"
                               />
                             </label>
                             <p className="pl-1">o arrastrar aquí</p>
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p id="file-upload-help" className="text-xs text-gray-500">
                             PNG, JPG, GIF hasta 5MB
                           </p>
                         </div>
@@ -619,9 +623,12 @@ const PaymentPage: React.FC = () => {
                   <div className="grid grid-cols-1 gap-6">
                     {/* Número de Tarjeta */}
                     <div>
-                      <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
                         Número de Tarjeta <span className="text-red-500" aria-label="requerido">*</span>
                       </label>
+                      <p id="card-number-help" className="mb-2 text-xs text-gray-500">
+                        Ingresa los 16 dígitos de tu tarjeta
+                      </p>
                       <div className="relative">
                         <input
                           type="text"
@@ -641,22 +648,22 @@ const PaymentPage: React.FC = () => {
                         <CreditCard className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" aria-hidden="true" />
                       </div>
                       {errors.cardNumber && (
-                        <p id="card-number-error" className="mt-2 text-sm text-red-600" role="alert">
+                        <p id="card-number-error" className="mt-2 text-sm text-red-600 flex items-start" role="alert">
                           <AlertCircle className="inline h-4 w-4 mr-1" aria-hidden="true" />
                           {errors.cardNumber}
                         </p>
                       )}
-                      <p id="card-number-help" className="mt-1 text-sm text-gray-500">
-                        Ingresa los 16 dígitos de tu tarjeta
-                      </p>
                     </div>
 
                     {/* Fecha de Expiración y CVV */}
                     <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
                           Fecha de Expiración <span className="text-red-500" aria-label="requerido">*</span>
                         </label>
+                        <p id="expiry-date-help" className="mb-2 text-xs text-gray-500">
+                          Formato: MM/YY
+                        </p>
                         <div className="relative">
                           <input
                             type="text"
@@ -670,24 +677,21 @@ const PaymentPage: React.FC = () => {
                               errors.expiryDate ? 'border-red-300 focus:border-red-300' : 'border-gray-300'
                             }`}
                             aria-invalid={errors.expiryDate ? 'true' : 'false'}
-                            aria-describedby={errors.expiryDate ? 'expiry-error' : 'expiry-help'}
+                            aria-describedby={errors.expiryDate ? 'expiry-date-error' : 'expiry-date-help'}
                             autoComplete="cc-exp"
                           />
                           <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" aria-hidden="true" />
                         </div>
                         {errors.expiryDate && (
-                          <p id="expiry-error" className="mt-2 text-sm text-red-600" role="alert">
+                          <p id="expiry-date-error" className="mt-2 text-sm text-red-600 flex items-start" role="alert">
                             <AlertCircle className="inline h-4 w-4 mr-1" aria-hidden="true" />
                             {errors.expiryDate}
                           </p>
                         )}
-                        <p id="expiry-help" className="mt-1 text-sm text-gray-500">
-                          Formato: MM/YY
-                        </p>
                       </div>
 
                       <div>
-                        <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">
                           <Tooltip 
                             content="El CVV es el código de seguridad de 3 dígitos que se encuentra en el reverso de tu tarjeta, junto a la firma. En tarjetas American Express son 4 dígitos en el frente."
                             position="top"
@@ -697,6 +701,9 @@ const PaymentPage: React.FC = () => {
                             </span>
                           </Tooltip>
                         </label>
+                        <p id="card-cvv-help" className="mb-2 text-xs text-gray-500">
+                          Código de 3 o 4 dígitos en el reverso
+                        </p>
                         <div className="relative">
                           <input
                             type="text"
@@ -710,28 +717,28 @@ const PaymentPage: React.FC = () => {
                               errors.cvv ? 'border-red-300 focus:border-red-300' : 'border-gray-300'
                             }`}
                             aria-invalid={errors.cvv ? 'true' : 'false'}
-                            aria-describedby={errors.cvv ? 'cvv-error' : 'cvv-help'}
+                            aria-describedby={errors.cvv ? 'card-cvv-error' : 'card-cvv-help'}
                             autoComplete="cc-csc"
                           />
                           <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" aria-hidden="true" />
                         </div>
                         {errors.cvv && (
-                          <p id="cvv-error" className="mt-2 text-sm text-red-600" role="alert">
+                          <p id="card-cvv-error" className="mt-2 text-sm text-red-600 flex items-start" role="alert">
                             <AlertCircle className="inline h-4 w-4 mr-1" aria-hidden="true" />
                             {errors.cvv}
                           </p>
                         )}
-                        <p id="cvv-help" className="mt-1 text-sm text-gray-500">
-                          Código de 3 o 4 dígitos en el reverso
-                        </p>
                       </div>
                     </div>
 
                     {/* Nombre del Titular */}
                     <div>
-                      <label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-1">
                         Nombre del Titular <span className="text-red-500" aria-label="requerido">*</span>
                       </label>
+                      <p id="cardholder-help" className="mb-2 text-xs text-gray-500">
+                        Nombre exacto como aparece en tu tarjeta
+                      </p>
                       <div className="relative">
                         <input
                           type="text"
@@ -755,27 +762,29 @@ const PaymentPage: React.FC = () => {
                           {errors.cardholderName}
                         </p>
                       )}
-                      <p id="cardholder-help" className="mt-1 text-sm text-gray-500">
-                        Nombre exacto como aparece en tu tarjeta
-                      </p>
                     </div>
                   </div>
                 </fieldset>
                 )}
 
                 {/* Botones */}
-                <div className="mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+                <div className="flex justify-between pt-4">
                   <button
                     type="button"
                     onClick={() => navigate(-1)}
-                    className="inline-flex justify-center items-center px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 shadow-sm text-sm sm:text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px]"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    aria-label="Volver al registro de pasajero"
                   >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
                     Volver
                   </button>
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="inline-flex justify-center items-center px-4 sm:px-6 py-2.5 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Completar el pago y confirmar reserva"
                   >
                     {isLoading ? (
                       <>
@@ -783,7 +792,12 @@ const PaymentPage: React.FC = () => {
                         <span className="ml-2 text-xs sm:text-sm">{processingStep || 'Procesando...'}</span>
                       </>
                     ) : (
-                      `Pagar $${displayData.total?.toFixed(2) || '0.00'}`
+                      <>
+                        Pagar ${displayData.total?.toFixed(2) || '0.00'}
+                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </>
                     )}
                   </button>
                 </div>
