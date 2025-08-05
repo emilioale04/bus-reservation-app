@@ -1,47 +1,78 @@
-# 🚌 Sistema de Reservas de Autobuses
+# 🚌 Bus Reservation App
 
-Sistema web para reservar asientos de autobuses interprovinciales.
-Proyecto de la asignatura Usabilidad y Accesibilidad.
+Aplicación web moderna para reservas de autobús construida con React, TypeScript, Tailwind CSS y Supabase.
 
-## 🚀 Tecnologías
+## ✨ Características
 
-- React + TypeScript + Vite
-- Tailwind CSS
-- Supabase
+- 🔍 Búsqueda de viajes por origen, destino y fecha
+- 💺 Selección interactiva de asientos
+- 📄 Generación automática de facturas en PDF
+- 📧 Envío de confirmaciones por email
+- 📱 Diseño completamente responsive
+- ♿ Accesibilidad web (WCAG)
 
-## ⚙️ Instalación
+## 🚀 Despliegue con Docker
 
-1. **Instalar dependencias**
+### Opción 1: Usar imagen de Docker Hub (Recomendado)
+
 ```bash
-npm install
-```
+# 1. Clonar el repositorio
+git clone https://github.com/emilioale04/bus-reservation-app.git
+cd bus-reservation-app
 
-2. **Configurar variables de entorno**
-```bash
+# 2. Configurar variables de entorno
 cp .env.example .env.local
+# Editar .env.local con tus credenciales
+
+# 3. Ejecutar con docker-compose
+docker-compose up -d
 ```
 
-3. **Agregar credenciales de Supabase en `.env.local`:**
-```env
-VITE_SUPABASE_URL=tu-url-aqui
-VITE_SUPABASE_ANON_KEY=tu-clave-aqui
-```
+La aplicación estará disponible en: <http://localhost:8080>
 
-4. **Iniciar el proyecto**
+### Opción 2: Construir imagen localmente
+
 ```bash
+# 1. Construir la imagen
+docker build -t bus-reservation-app .
+
+# 2. Ejecutar el contenedor
+docker run -p 8080:80 --env-file ./.env.local bus-reservation-app
+```
+
+## ⚙️ Variables de Entorno
+
+Crea un archivo `.env.local` con:
+
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_clave_anonima
+VITE_EMAILJS_SERVICE_ID=tu_service_id
+VITE_EMAILJS_TEMPLATE_ID=tu_template_id
+VITE_EMAILJS_PUBLIC_KEY=tu_public_key
+```
+
+## 🛠️ Desarrollo Local
+
+```bash
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
 npm run dev
 ```
 
-## 📋 Comandos
+## 📦 Tecnologías
 
-```bash
-npm run dev      # Desarrollo
-npm run build    # Construir para producción
-```
+- **Frontend**: React 19, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL)
+- **Email**: EmailJS
+- **PDF**: jsPDF, html2canvas
+- **Despliegue**: Docker, Nginx
 
-## 🎯 Estado Actual
+## 🔧 Scripts Disponibles
 
-- ✅ Página de inicio
-- 🚧 Búsqueda de rutas
-- 🚧 Selección de asientos
-- 🚧 Reservas y pagos
+- `npm run dev` - Servidor de desarrollo
+- `npm run build` - Construir para producción
+- `npm run lint` - Ejecutar ESLint
+- `npm run init-supabase` - Configurar base de datos
