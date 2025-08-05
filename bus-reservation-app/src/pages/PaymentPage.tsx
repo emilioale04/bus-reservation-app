@@ -71,6 +71,7 @@ const PaymentPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
+  const [processingProgress, setProcessingProgress] = useState(0);
 
   useEffect(() => {
     if (!bookingData) {
@@ -250,26 +251,31 @@ const PaymentPage: React.FC = () => {
       
       // Paso 1: Validar pago (simulado)
       setProcessingStep('Validando método de pago...');
+      setProcessingProgress(10);
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log('✅ Pago validado exitosamente');
 
       // Paso 2: Generar código de confirmación
       setProcessingStep('Generando confirmación...');
+      setProcessingProgress(20);
       const generatedCode = generateConfirmationCode();
       console.log('✅ Código de confirmación generado:', generatedCode);
 
       // Paso 3: Crear bucket si no existe
       setProcessingStep('Configurando sistema de archivos...');
+      setProcessingProgress(30);
       await createInvoicesBucket();
       console.log('✅ Sistema de archivos configurado');
 
       // Paso 4: Obtener información completa del viaje
       setProcessingStep('Obteniendo información del viaje...');
+      setProcessingProgress(40);
       const tripInfo = await getCompleteTripInfo(bookingData.tripId);
       console.log('✅ Información del viaje obtenida:', tripInfo);
 
       // Paso 5: Preparar datos para la factura
       setProcessingStep('Preparando factura...');
+      setProcessingProgress(50);
       
       const invoiceData: InvoiceData = {
         reservationId: `RES-${Date.now()}`,
@@ -301,16 +307,19 @@ const PaymentPage: React.FC = () => {
 
       // Paso 6: Generar PDF
       setProcessingStep('Generando factura...');
+      setProcessingProgress(60);
       const pdfBuffer = generateInvoicePDF(invoiceData);
       console.log('✅ PDF generado exitosamente');
 
       // Paso 7: Subir factura a Storage
       setProcessingStep('Subiendo factura...');
+      setProcessingProgress(70);
       const invoiceUrl = await uploadInvoiceToStorage(pdfBuffer, invoiceData.reservationId);
       console.log('✅ Factura subida:', invoiceUrl);
 
       // Paso 8: Guardar reserva, pasajero y pago en base de datos
       setProcessingStep('Guardando reserva en base de datos...');
+      setProcessingProgress(80);
       const reservationResult = await processCompleteReservation({
         tripId: bookingData.tripId,
         passengerInfo: bookingData.passengerInfo,
@@ -326,11 +335,13 @@ const PaymentPage: React.FC = () => {
 
       // Paso 9: Actualizar asientos como reservados
       setProcessingStep('Reservando asientos...');
+      setProcessingProgress(85);
       await updateSeatsAsReserved(bookingData.tripId, bookingData.selectedSeats);
       console.log('✅ Asientos reservados exitosamente');
 
       // Paso 10: Enviar email con factura
       setProcessingStep('Enviando confirmación por email...');
+      setProcessingProgress(90);
       const emailSent = await sendInvoiceEmail({
         to_email: bookingData.passengerInfo.email,
         to_name: `${bookingData.passengerInfo.nombre} ${bookingData.passengerInfo.apellido}`,
@@ -358,6 +369,8 @@ const PaymentPage: React.FC = () => {
       console.log('✅ Proceso completado exitosamente');
 
       // Paso 11: Navegar a confirmación con todos los datos procesados
+      setProcessingStep('Finalizando...');
+      setProcessingProgress(100);
       navigate('/confirmation', {
         state: {
           ...bookingData,
@@ -418,13 +431,23 @@ const PaymentPage: React.FC = () => {
   const displayData = getDisplayData();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 relative">
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-8 shadow-xl text-center">
-            <LoadingSpinner message="" />
-            <p className="mt-4 text-lg font-medium text-gray-900">{processingStep || 'Procesando...'}</p>
-            <p className="text-sm text-gray-600 mt-2">Por favor, no cierre ni actualice la página.</p>
+        <div className="fixed inset-0 bg-white bg-opacity-75 backdrop-blur-sm z-50 flex justify-center items-center transition-all duration-300 ease-in-out">
+          <div className="bg-white rounded-xl p-8 shadow-2xl text-center max-w-md mx-4 border border-gray-100 transform transition-all duration-300 ease-in-out">
+            <div className="mb-6">
+              <LoadingSpinner message="" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {processingStep || 'Procesando pago...'}
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Por favor, no cierre ni actualice la página.
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out" 
+                   style={{width: `${processingProgress}%`}}></div>
+            </div>
           </div>
         </div>
       )}
@@ -704,7 +727,7 @@ const PaymentPage: React.FC = () => {
                         <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">
                           <Tooltip 
                             content="El CVV es el código de seguridad de 3 dígitos que se encuentra en el reverso de tu tarjeta, junto a la firma. En tarjetas American Express son 4 dígitos en el frente."
-                            position="top"
+                            position="right"
                           >
                             <span className="cursor-help">
                               CVV <span className="text-red-500" aria-label="requerido">*</span>
@@ -794,9 +817,11 @@ const PaymentPage: React.FC = () => {
                     type="submit"
                     disabled={isLoading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Completar el pago y confirmar reserva"
+                    aria-label={paymentData.paymentMethod === 'transfer' ? "Continuar con la transferencia bancaria" : "Completar el pago y confirmar reserva"}
                   >
-                    {isLoading ? 'Procesando...' : `Pagar $${displayData.total?.toFixed(2) || '0.00'}`}
+                    {isLoading ? 'Procesando...' : 
+                     paymentData.paymentMethod === 'transfer' ? 'Continuar' : 
+                     `Pagar $${displayData.total?.toFixed(2) || '0.00'}`}
                   </button>
                 </div>
               </form>
